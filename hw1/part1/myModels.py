@@ -6,27 +6,75 @@ class myLeNet(nn.Module):
     def __init__(self, num_out):
         super(myLeNet, self).__init__()
         self.conv1 = nn.Sequential(
-            nn.Conv2d(3, 6, kernel_size=5, stride=1),
+            nn.Conv2d(3, 18, kernel_size=5, stride=1),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2)
         )
         self.conv2 = nn.Sequential(
-            nn.Conv2d(6, 16, kernel_size=5),
+            nn.Conv2d(18, 6, kernel_size=1, stride=1),
+            nn.ReLU(),
+        )
+        self.conv3 = nn.Sequential(
+            nn.Conv2d(6, 16, kernel_size=5, stride=1),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2)
         )
         
         self.fc1 = nn.Sequential(nn.Linear(400, 120), nn.ReLU())
-        self.fc2 = nn.Sequential(nn.Linear(120,84), nn.ReLU())
+        self.fc2 = nn.Sequential(nn.Linear(120, 84), nn.ReLU())
         self.fc3 = nn.Linear(84, num_out)
 
     def forward(self, x):
         x = self.conv1(x)
         x = self.conv2(x)
+        x = self.conv3(x)
         x = torch.flatten(x, start_dim=1, end_dim=-1)
-        print(x.shape)
+        # print(x.shape)
         x = self.fc1(x)
         x = self.fc2(x)
         x = self.fc3(x)
-        out = x
-        return out
+        return x
+
+
+class AlexNet(nn.Module):
+    def __init__(self, num_out):
+        super(AlexNet, self).__init__()
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=11, padding=2, stride=4),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=3, stride=2)
+        )
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(64, 192, kernel_size=5, padding=2, stride=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=3, stride=2)
+        )
+        self.conv3 = nn.Sequential(
+            nn.Conv2d(192, 384, kernel_size=3, padding=1, stride=1),
+            nn.ReLU(),
+        )
+        self.conv4 = nn.Sequential(
+            nn.Conv2d(384, 256, kernel_size=3, padding=1, stride=1),
+            nn.ReLU(),
+        )
+        self.conv5 = nn.Sequential(
+            nn.Conv2d(256, 256, kernel_size=3, padding=1, stride=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=3, stride=2)
+        )
+        self.fc1 = nn.Sequential(nn.Linear(256*6*6, 4096), nn.ReLU())
+        self.fc2 = nn.Sequential(nn.Linear(4096, 1024), nn.ReLU())
+        self.fc3 = nn.Linear(1024, num_out)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = self.conv5(x)
+        x = torch.flatten(x, start_dim=1, end_dim=-1)
+        # print(x.shape)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = self.fc3(x)
+        return x
