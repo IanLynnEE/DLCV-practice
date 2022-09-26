@@ -13,14 +13,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_root', type=str, default='./data/p1_data/')
     parser.add_argument('--num_out', type=int, default=50)
-    parser.add_argument('--batch_size', type=int, default=10)
-    parser.add_argument('--num_epochs', type=int, default=10)
+    parser.add_argument('--batch_size', type=int, default=250)
+    parser.add_argument('--num_epochs', type=int, default=30)
     parser.add_argument('--learning_rate', type=float, default=0.01)
     parser.add_argument('--seed', type=int, default=60470)
     args = parser.parse_args()
 
     device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
-    device = 'mps'
 
     train_set = part1_dataset(prefix=os.path.join(args.data_root, 'train_50'))
     val_set = part1_dataset(prefix=os.path.join(args.data_root, 'val_50'))

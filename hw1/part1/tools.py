@@ -9,14 +9,12 @@ import torch.nn as nn
 def save_model(model, path):
     print(f'Saving model to {path}...')
     torch.save(model.state_dict(), path)
-    print('End of saving.')
 
 def load_parameters(model, path):
     print(f'Loading model parameters from {path}...')
     # TODO: how many gpu to use?
     param = torch.load(path, map_location={'cuda:0': 'cuda:1'})
     model.load_state_dict(param)
-    print('End of loading.')
 
 def train(model, train_loader, val_loader, num_epoch, device, criterion, optimizer, scheduler=None):
     train_loss = np.zeros(num_epoch, dtype=np.float32)
@@ -27,7 +25,7 @@ def train(model, train_loader, val_loader, num_epoch, device, criterion, optimiz
     start_train = time.time()
 
     for epoch in range(num_epoch):
-        print(f'epoch = {epoch}')
+        print(f'\nepoch = {epoch}', end='', flush=True)
         start_time = time.time()
         reg_loss = 0.0 
         corr_num = 0
@@ -56,8 +54,8 @@ def train(model, train_loader, val_loader, num_epoch, device, criterion, optimiz
         with torch.no_grad():
             model.eval()
             for batch_idx, (data, label, ) in enumerate(val_loader):
-                data.to(device)
-                label.to(device)
+                data = data.to(device)
+                label = label.to(device)
                 output = model(data)
                 loss = criterion(output, label)
                 reg_loss += loss.item()
@@ -67,11 +65,11 @@ def train(model, train_loader, val_loader, num_epoch, device, criterion, optimiz
         val_acc[epoch] = corr_num / len(val_loader.dataset)
 
         end_time = time.time()
-        print(f'\r, time = {(time.time() - start_time) // 60} MIN')
+        print(f', time = {time.time() - start_time} SEC')
         print(f'training loss = {train_loss[epoch]:.4f}, training acc = {train_acc[epoch]:.4f}')
         print(f'validation loss = {val_loss[epoch]:.4f}, validation acc = {val_acc[epoch]:.4f}')
 
-        if val_acc > best_acc:
-            best_acc = val_acc
-            save_model(model, './models/best_model.pt')
-        save_model(model, f'./models/{epoch}.pt')
+        if val_acc[epoch] > best_acc:
+            best_acc = val_acc[epoch]
+            save_model(model, './save_models/best_model.pt')
+        save_model(model, f'./save_models/{epoch}.pt')

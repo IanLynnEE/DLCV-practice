@@ -7,7 +7,6 @@ from torchvision.transforms import transforms
 class part1_dataset(Dataset):
     def __init__(self, prefix):
         self.images = os.listdir(prefix)
-        print(type(self.images))
         self.labels = self.images.copy()
         for i, filename in enumerate(self.images):
             self.labels[i] = int(filename.split('_')[0])
