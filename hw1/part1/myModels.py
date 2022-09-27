@@ -8,25 +8,21 @@ class myLeNet(nn.Module):
         self.conv1 = nn.Sequential(
             nn.Conv2d(3, 18, kernel_size=5, stride=1),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2)
-        )
-        self.conv2 = nn.Sequential(
             nn.Conv2d(18, 6, kernel_size=1, stride=1),
             nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2)
         )
         self.conv3 = nn.Sequential(
             nn.Conv2d(6, 16, kernel_size=5, stride=1),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2)
         )
-        
         self.fc1 = nn.Sequential(nn.Linear(400, 120), nn.ReLU())
         self.fc2 = nn.Sequential(nn.Linear(120, 84), nn.ReLU())
         self.fc3 = nn.Linear(84, num_out)
 
     def forward(self, x):
         x = self.conv1(x)
-        x = self.conv2(x)
         x = self.conv3(x)
         x = torch.flatten(x, start_dim=1, end_dim=-1)
         # print(x.shape)
@@ -36,16 +32,16 @@ class myLeNet(nn.Module):
         return x
 
 
-class AlexNet(nn.Module):
+class myAlexNet(nn.Module):
     def __init__(self, num_out):
-        super(AlexNet, self).__init__()
+        super(myAlexNet, self).__init__()
         self.conv1 = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=11, padding=2, stride=4),
+            nn.Conv2d(3, 64, kernel_size=5, padding=1, stride=1),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=3, stride=2)
+            nn.MaxPool2d(kernel_size=2, stride=2)
         )
         self.conv2 = nn.Sequential(
-            nn.Conv2d(64, 192, kernel_size=5, padding=2, stride=1),
+            nn.Conv2d(64, 192, kernel_size=3, padding=1, stride=1),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=3, stride=2)
         )
@@ -62,9 +58,9 @@ class AlexNet(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=3, stride=2)
         )
-        self.fc1 = nn.Sequential(nn.Linear(256*6*6, 4096), nn.ReLU())
-        self.fc2 = nn.Sequential(nn.Linear(4096, 1024), nn.ReLU())
-        self.fc3 = nn.Linear(1024, num_out)
+        self.fc1 = nn.Sequential(nn.Linear(256*3*3, 1024), nn.ReLU())
+        self.fc2 = nn.Sequential(nn.Linear(1024, 256), nn.ReLU())
+        self.fc3 = nn.Linear(256, num_out)
 
     def forward(self, x):
         x = self.conv1(x)
