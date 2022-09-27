@@ -1,9 +1,9 @@
 import os
-import time
 
 import numpy as np
 import torch
 import torch.nn as nn
+from tqdm import tqdm
 
 
 def save_model(model, path):
@@ -12,9 +12,10 @@ def save_model(model, path):
 
 def load_parameters(model, path):
     print(f'Loading model parameters from {path}...')
-    # TODO: how many gpu to use?
-    param = torch.load(path, map_location={'cuda:0': 'cuda:1'})
+    param = torch.load(path)
     model.load_state_dict(param)
+    # TODO: model.to(device)
+    # https://www.codenong.com/cs106326580/
 
 def train(model, train_loader, val_loader, num_epoch, device, criterion, optimizer, scheduler=None):
     train_loss = np.zeros(num_epoch, dtype=np.float32)
@@ -22,15 +23,12 @@ def train(model, train_loader, val_loader, num_epoch, device, criterion, optimiz
     val_loss = np.zeros(num_epoch, dtype=np.float32)
     val_acc = np.zeros(num_epoch, dtype=np.float32)
     best_acc = 0
-    start_train = time.time()
 
     for epoch in range(num_epoch):
-        print(f'\nepoch = {epoch}', end='', flush=True)
-        start_time = time.time()
         reg_loss = 0.0 
         corr_num = 0
         model.train()
-        for batch_idx, (data, label, ) in enumerate(train_loader):
+        for batch_idx, (data, label, ) in enumerate(tqdm(train_loader, postfix=f'epoch = {epoch}')):
             data = data.to(device)
             label = label.to(device)
             output = model(data)
@@ -64,8 +62,6 @@ def train(model, train_loader, val_loader, num_epoch, device, criterion, optimiz
         val_loss[epoch] = reg_loss / len(val_loader.dataset)
         val_acc[epoch] = corr_num / len(val_loader.dataset)
 
-        end_time = time.time()
-        print(f', time = {time.time() - start_time} SEC')
         print(f'training loss = {train_loss[epoch]:.4f}, training acc = {train_acc[epoch]:.4f}')
         print(f'validation loss = {val_loss[epoch]:.4f}, validation acc = {val_acc[epoch]:.4f}')
 
