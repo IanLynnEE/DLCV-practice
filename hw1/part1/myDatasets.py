@@ -20,10 +20,10 @@ class part1_dataset(Dataset):
         img_name = os.path.join(self.prefix, self.images[idx])
         label_name = self.labels[idx]
         image = Image.open(img_name)
-        # https://pytorch.org/vision/stable/transforms.html
-        means = [0.485, 0.456, 0.406]
-        stds = [0.229, 0.224, 0.225]
+        means = [0.4822673, 0.44025022, 0.38372642]
+        stds = [0.24469455, 0.23420024, 0.23852295]
         trans = transforms.Compose([
+            transforms.Resize(224, interpolation=3),
             transforms.ToTensor(),
             transforms.Normalize(means, stds),
         ])
