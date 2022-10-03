@@ -5,9 +5,13 @@ import torch
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 
-from myModels import myLeNet
+from myModels import myLeNet, AlexNet
 from myDatasets import part1_dataset
 from tools import train
+
+
+def fix_seed():
+    pass
 
 def main():
     parser = argparse.ArgumentParser()
@@ -27,7 +31,7 @@ def main():
     val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False)
 
 
-    model = myLeNet(num_out=args.num_out)
+    model = AlexNet(num_out=args.num_out)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
     # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer)
     criterion = torch.nn.CrossEntropyLoss()

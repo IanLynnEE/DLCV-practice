@@ -38,12 +38,12 @@ class myAlexNet(nn.Module):
         print('Initializing myAlexNet...')
         super(myAlexNet, self).__init__()
         self.conv1 = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=5, padding=1, stride=1),
+            nn.Conv2d(3, 64, kernel_size=11, padding=2, stride=4),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2)
+            nn.MaxPool2d(kernel_size=3, stride=2)
         )
         self.conv2 = nn.Sequential(
-            nn.Conv2d(64, 192, kernel_size=3, padding=1, stride=1),
+            nn.Conv2d(64, 192, kernel_size=5, padding=2, stride=1),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=3, stride=2)
         )
@@ -60,9 +60,9 @@ class myAlexNet(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=3, stride=2)
         )
-        self.fc1 = nn.Sequential(nn.Linear(256*3*3, 1024), nn.ReLU())
-        self.fc2 = nn.Sequential(nn.Linear(1024, 256), nn.ReLU())
-        self.fc3 = nn.Linear(256, num_out)
+        self.fc1 = nn.Sequential(nn.Linear(256*6*6, 4096), nn.ReLU())
+        self.fc2 = nn.Sequential(nn.Linear(4096, 4096), nn.ReLU())
+        self.fc3 = nn.Linear(4096, num_out)
 
     def forward(self, x):
         x = self.conv1(x)
