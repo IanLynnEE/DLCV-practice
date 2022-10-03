@@ -4,6 +4,7 @@ import torch.nn as nn
 
 class myLeNet(nn.Module):
     def __init__(self, num_out):
+        print('Initializing myLeNet...')
         super(myLeNet, self).__init__()
         self.conv1 = nn.Sequential(
             nn.Conv2d(3, 18, kernel_size=5, stride=1),
@@ -17,9 +18,9 @@ class myLeNet(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2)
         )
-        self.fc1 = nn.Sequential(nn.Linear(400, 120), nn.ReLU())
-        self.fc2 = nn.Sequential(nn.Linear(120, 84), nn.ReLU())
-        self.fc3 = nn.Linear(84, num_out)
+        self.fc1 = nn.Sequential(nn.Linear(400, 200), nn.ReLU())
+        self.fc2 = nn.Sequential(nn.Linear(200, 200), nn.ReLU())
+        self.fc3 = nn.Linear(200, num_out)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -34,6 +35,7 @@ class myLeNet(nn.Module):
 
 class myAlexNet(nn.Module):
     def __init__(self, num_out):
+        print('Initializing myAlexNet...')
         super(myAlexNet, self).__init__()
         self.conv1 = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=5, padding=1, stride=1),
