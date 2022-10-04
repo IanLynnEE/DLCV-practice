@@ -2,7 +2,7 @@ import os
 
 from PIL import Image
 from torch.utils.data import Dataset
-from torchvision import transforms, InterpolationMode
+from torchvision.transforms import transforms, InterpolationMode
 
 class part1_dataset(Dataset):
     def __init__(self, prefix, training=False):
@@ -25,15 +25,16 @@ class part1_dataset(Dataset):
         stds = [0.24469455, 0.23420024, 0.23852295]
         if self.training == True:
             trans = transforms.Compose([
-                transforms.RandomResizedCrop(224, interpolation=InterpolationMode.BICUBIC),
                 transforms.ToTensor(),
                 transforms.Normalize(means, stds),
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomResizedCrop(224, interpolation=InterpolationMode.BICUBIC),
             ])
         else:
             trans = transforms.Compose([
-                transforms.Resize(224, interpolation=InterpolationMode.BICUBIC),
                 transforms.ToTensor(),
                 transforms.Normalize(means, stds),
+                transforms.Resize(224, interpolation=InterpolationMode.BICUBIC),
             ])
         image = trans(image)
         return image, label_name
