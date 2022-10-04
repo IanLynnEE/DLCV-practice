@@ -2,7 +2,7 @@ import os
 
 from PIL import Image
 from torch.utils.data import Dataset
-from torchvision.transforms import transforms
+from torchvision.transforms import transforms, InterpolationMode
 
 class part1_dataset(Dataset):
     def __init__(self, prefix):
@@ -23,7 +23,7 @@ class part1_dataset(Dataset):
         means = [0.4822673, 0.44025022, 0.38372642]
         stds = [0.24469455, 0.23420024, 0.23852295]
         trans = transforms.Compose([
-            transforms.Resize(224, interpolation=3),
+            transforms.Resize(224, interpolation=InterpolationMode.BICUBIC),
             transforms.ToTensor(),
             transforms.Normalize(means, stds),
         ])

@@ -1,5 +1,35 @@
 import torch
 import torch.nn as nn
+from torchvision import models
+
+class myGoogLeNet(nn.Module):
+    def __init__(self, num_out):
+        super(myGoogLeNet, self).__init__()
+        self.model = models.googlenet(weights=models.GoogLeNet_Weights.DEFAULT)
+
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        self.model.fc = nn.Linear(1024, num_out)
+
+    def forward(self, x):
+        logits = self.model(x)
+        return logits
+
+
+class myResNet50(nn.Module):
+    def __init__(self, num_out):
+        super(myResNet50, self).__init__()
+        self.model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        self.model.fc = nn.Linear(2048, num_out)
+
+    def forward(self, x):
+        logits = self.model(x)
+        return logits
 
 
 class myLeNet(nn.Module):
