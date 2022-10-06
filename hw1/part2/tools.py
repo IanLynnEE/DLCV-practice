@@ -69,8 +69,8 @@ def train(model, train_loader, val_loader, num_epoch, device, criterion, optimiz
 
         print('score =', score / len(val_loader.dataset))
 
-        print(f'training loss = {train_loss[epoch]:.4f}, training acc = {train_score[epoch]:.4f}')
-        print(f'validation loss = {val_loss[epoch]:.4f}, validation acc = {val_score[epoch]:.4f}')
+        print(f'training loss = {train_loss[epoch]:.4f}, training score = {train_score[epoch]:.4f}')
+        print(f'validation loss = {val_loss[epoch]:.4f}, validation score = {val_score[epoch]:.4f}')
 
         if val_score[epoch] > best_acc:
             best_acc = val_score[epoch]
@@ -95,6 +95,7 @@ class MetricTracker:
             self._data['union'][i] += np.logical_or(target == i, prediction == i).sum()
     
     def get_result(self):
-        print('number of union', self._data['union'])
+        print('number of overlap\n', self._data['overlap'])
+        print('number of union\n', self._data['union'])
         self._data['iou'] = self._data['overlap'] / self._data['union']
         return self._data['iou'].mean()

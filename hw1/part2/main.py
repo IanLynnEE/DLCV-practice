@@ -37,7 +37,7 @@ def main():
     val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False)
 
     model = VGG16_FCN32(num_classes=args.num_classes)
-    optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate)
     criterion = torch.nn.CrossEntropyLoss()
     model.to(device)
     train(model, train_loader, val_loader, args.num_epochs, device, criterion, optimizer)
