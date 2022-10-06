@@ -22,7 +22,7 @@ class part2_dataset(Dataset):
         if self.has_mask:
             mask_filename = img_filename.replace('_sat.jpg', '_mask.png')
             mask_image = Image.open(mask_filename)
-            mask = (np.asarray(mask_image) > 127).astype(np.int8)
+            mask = (np.asarray(mask_image) > 127).astype(np.int64)
             mask = 4 * mask[:, :, 0] + 2 * mask[:, :, 1] + mask[:, :, 2]
             mask[mask == 3] = 0  # (Cyan: 011) Urban land 
             mask[mask == 6] = 1  # (Yellow: 110) Agriculture land 
@@ -30,6 +30,7 @@ class part2_dataset(Dataset):
             mask[mask == 2] = 3  # (Green: 010) Forest land 
             mask[mask == 1] = 4  # (Blue: 001) Water 
             mask[mask == 7] = 5  # (White: 111) Barren land 
-            mask[mask == 0] = 6  # (Black: 000) Unknown 
+            mask[mask == 0] = 6  # (Black: 000) Unknown
+            mask[mask == 4] = 6  # Unknown
             return image, mask
         return image

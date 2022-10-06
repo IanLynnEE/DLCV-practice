@@ -15,7 +15,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_root', type=str, default='./data/p2_data/')
     parser.add_argument('--num_classes', type=int, default=7)
-    parser.add_argument('--batch_size', type=int, default=1)
+    parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--num_epochs', type=int, default=20)
     parser.add_argument('--learning_rate', type=float, default=0.01)
     args = parser.parse_args()
@@ -36,7 +36,7 @@ def main():
     train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
     val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False)
 
-    model = VGG16_FCN32(num_classes=args.num_out)
+    model = VGG16_FCN32(num_classes=args.num_classes)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate)
     criterion = torch.nn.CrossEntropyLoss()
     model.to(device)
