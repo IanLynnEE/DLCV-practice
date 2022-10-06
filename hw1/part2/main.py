@@ -14,7 +14,7 @@ from tools import train
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_root', type=str, default='./data/p2_data/')
-    parser.add_argument('--num_out', type=int, default=7)
+    parser.add_argument('--num_classes', type=int, default=7)
     parser.add_argument('--batch_size', type=int, default=1)
     parser.add_argument('--num_epochs', type=int, default=20)
     parser.add_argument('--learning_rate', type=float, default=0.01)
@@ -34,7 +34,7 @@ def main():
     train_set = part2_dataset(prefix=train_dir, trans=trans, has_mask=True)
     val_set = part2_dataset(prefix=val_dir, trans=trans, has_mask=True)
     train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
-    val_loader = DataLoader(val_set, batch_size=8, shuffle=False)
+    val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False)
 
     model = VGG16_FCN32(num_classes=args.num_out)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate)

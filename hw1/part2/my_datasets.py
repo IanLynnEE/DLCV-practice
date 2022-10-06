@@ -3,7 +3,6 @@ import os
 import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset
-from torchvision.transforms import transforms
 
 class part2_dataset(Dataset):
     def __init__(self, prefix, trans, has_mask=False):
@@ -23,7 +22,14 @@ class part2_dataset(Dataset):
         if self.has_mask:
             mask_filename = img_filename.replace('_sat.jpg', '_mask.png')
             mask_image = Image.open(mask_filename)
-            mask = (np.asarray(mask_image) == 255).astype(np.int64)
-            mask_label = 3 * mask[:, :, 0] + 2 * mask[:, :, 1] + mask[:, :, 2]
-            return image, mask_label
+            mask = (np.asarray(mask_image) > 127).astype(np.int8)
+            mask = 4 * mask[:, :, 0] + 2 * mask[:, :, 1] + mask[:, :, 2]
+            mask[mask == 3] = 0  # (Cyan: 011) Urban land 
+            mask[mask == 6] = 1  # (Yellow: 110) Agriculture land 
+            mask[mask == 5] = 2  # (Purple: 101) Rangeland 
+            mask[mask == 2] = 3  # (Green: 010) Forest land 
+            mask[mask == 1] = 4  # (Blue: 001) Water 
+            mask[mask == 7] = 5  # (White: 111) Barren land 
+            mask[mask == 0] = 6  # (Black: 000) Unknown 
+            return image, mask
         return image
