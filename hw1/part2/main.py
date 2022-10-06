@@ -14,16 +14,16 @@ from tools import train
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_root', type=str, default='./data/p2_data/')
-    parser.add_argument('--num_classes', type=int, default=7)
+    parser.add_argument('--num_classes', type=int, default=8)
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--num_epochs', type=int, default=20)
-    parser.add_argument('--learning_rate', type=float, default=0.01)
+    parser.add_argument('--learning_rate', type=float, default=0.0001)
     args = parser.parse_args()
 
     device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
 
-    means = [0.40081254, 0.3740841, 0.28069308]
-    stds = [0.12177204, 0.09216606, 0.08300865]
+    means = [0.40851322, 0.37851325, 0.28088534]
+    stds = [0.14234462, 0.10848372, 0.09824718]
     trans = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(means, stds),

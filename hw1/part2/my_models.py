@@ -1,11 +1,11 @@
 import torch.nn as nn
-from torchvision.models import vgg16
+from torchvision.models import vgg16, VGG16_Weights
 
 
 class VGG16_FCN32(nn.Module):
     def __init__(self, num_classes=7):
         super().__init__()
-        self.vgg16_features = vgg16(pretrained=True).features
+        self.vgg16_features = vgg16(VGG16_Weights.IMAGENET1K_FEATURES).features
         self.classifier = nn.Sequential(
             nn.Conv2d(in_channels=512, out_channels=4096, kernel_size=2),
             nn.ReLU(inplace=True),
@@ -20,7 +20,8 @@ class VGG16_FCN32(nn.Module):
             in_channels=num_classes,
             out_channels=num_classes,
             kernel_size=64,
-            stride=32, bias=False
+            stride=32,
+            bias=False
         )
 
     def forward(self, x):
