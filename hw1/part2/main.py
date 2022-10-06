@@ -22,8 +22,8 @@ def main():
 
     device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
 
-    means = [0.4822673, 0.44025022, 0.38372642]
-    stds = [0.24469455, 0.23420024, 0.23852295]
+    means = [0.40081254, 0.3740841, 0.28069308]
+    stds = [0.12177204, 0.09216606, 0.08300865]
     trans = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(means, stds),
