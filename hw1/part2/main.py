@@ -4,7 +4,6 @@ import argparse
 import torch
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
-import matplotlib.pyplot as plt
 
 from my_models import VGG16_FCN32
 from my_datasets import part2_dataset
@@ -14,7 +13,7 @@ from tools import train
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_root', type=str, default='./data/p2_data/')
-    parser.add_argument('--num_classes', type=int, default=8)
+    parser.add_argument('--num_classes', type=int, default=7)
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--num_epochs', type=int, default=20)
     parser.add_argument('--learning_rate', type=float, default=0.0001)
@@ -42,6 +41,7 @@ def main():
     model.to(device)
     train(model, train_loader, val_loader, args.num_epochs, device, criterion, optimizer)
     return
+
 
 if __name__ == '__main__':
     main()

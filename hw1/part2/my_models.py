@@ -5,7 +5,7 @@ from torchvision.models import vgg16, VGG16_Weights
 class VGG16_FCN32(nn.Module):
     def __init__(self, num_classes=7):
         super().__init__()
-        self.vgg16_features = vgg16(VGG16_Weights.IMAGENET1K_FEATURES).features
+        self.vgg16_features = vgg16(weights=VGG16_Weights.IMAGENET1K_FEATURES).features
         self.classifier = nn.Sequential(
             nn.Conv2d(in_channels=512, out_channels=4096, kernel_size=2),
             nn.ReLU(inplace=True),

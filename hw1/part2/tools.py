@@ -7,16 +7,17 @@ from tqdm import tqdm
 
 
 def mean_iou_score(prediction, target):
-     prediction = prediction.cpu().numpy()
-     target = target.cpu().numpy()
-     mean_iou = 0
-     for i in range(8):
-         tp_fp = np.sum(prediction == i)
-         tp_fn = np.sum(target == i)
-         tp = np.sum((prediction == i) * (target == i))
-         iou = tp / (tp_fp + tp_fn - tp)
-         mean_iou += iou / 6
-     return mean_iou
+    prediction = prediction.cpu().numpy()
+    target = target.cpu().numpy()
+    mean_iou = 0
+    for i in range(6):
+        tp_fp = np.sum(prediction == i)
+        tp_fn = np.sum(target == i)
+        tp = np.sum((prediction == i) * (target == i))
+        iou = tp / (tp_fp + tp_fn - tp + np.finfo(np.float32).eps)
+        mean_iou += iou / 6
+    return mean_iou
+
 
 def save_model(model, path):
     print(f'Saving model to {path}...')
@@ -80,9 +81,9 @@ def train(model, train_loader, val_loader, num_epoch, device, criterion, optimiz
 
 class MetricTracker:
     def __init__(self):
-        self._data = pd.DataFrame(index=[0, 1, 2, 3, 4, 5, 6, 7], columns=['overlap', 'union', 'target', 'prediction'])
+        self._data = pd.DataFrame(index=[0, 1, 2, 3, 4, 5], columns=['overlap', 'union', 'target', 'prediction'])
         self.reset()
-        
+
     def reset(self):
         for col in self._data.columns:
             self._data[col].values[:] = 0
@@ -90,12 +91,12 @@ class MetricTracker:
     def update(self, target, prediction):
         target = target.cpu().numpy()
         prediction = prediction.cpu().numpy()
-        for i in range(8):
+        for i in range(6):
             self._data['overlap'][i] += np.logical_and(target == i, prediction == i).sum()
             self._data['union'][i] += np.logical_or(target == i, prediction == i).sum()
             self._data['target'][i] += (target == i).sum()
             self._data['prediction'][i] += (prediction == i).sum()
-    
+
     def get_result(self):
         self._data['iou'] = self._data['overlap'] / self._data['union']
         print(self._data)
