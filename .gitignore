@@ -1,7 +1,7 @@
 # Don't upload data
 data/
 save_models/
-
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
