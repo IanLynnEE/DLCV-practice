@@ -1,22 +1,7 @@
-import os
-
 import numpy as np
 import pandas as pd
 import torch
 from tqdm import tqdm
-
-
-def mean_iou_score(prediction, target):
-    prediction = prediction.cpu().numpy()
-    target = target.cpu().numpy()
-    mean_iou = 0
-    for i in range(6):
-        tp_fp = np.sum(prediction == i)
-        tp_fn = np.sum(target == i)
-        tp = np.sum((prediction == i) * (target == i))
-        iou = tp / (tp_fp + tp_fn - tp + np.finfo(np.float32).eps)
-        mean_iou += iou / 6
-    return mean_iou
 
 
 def save_model(model, path):
@@ -33,7 +18,6 @@ def train(model, train_loader, val_loader, num_epoch, device, criterion, optimiz
 
     for epoch in range(num_epoch):
         reg_loss = 0.0
-        score = 0.0
         tracker = MetricTracker()
         model.train()
         for batch_idx, (data, label, ) in enumerate(tqdm(train_loader, postfix=f'epoch = {epoch}')):
@@ -45,15 +29,11 @@ def train(model, train_loader, val_loader, num_epoch, device, criterion, optimiz
             loss.backward()
             optimizer.step()
             reg_loss += loss.item()
-            score += mean_iou_score(output.argmax(dim=1), label)
             tracker.update(label, output.argmax(dim=1))
         train_loss[epoch] = reg_loss / len(train_loader.dataset)
         train_score[epoch] = tracker.get_result()
 
-        print('score =', score / len(train_loader.dataset))
-
         reg_loss = 0.0
-        score = 0.0
         tracker.reset()
         with torch.no_grad():
             model.eval()
@@ -62,13 +42,10 @@ def train(model, train_loader, val_loader, num_epoch, device, criterion, optimiz
                 label = label.to(device)
                 output = model(data)
                 loss = criterion(output, label)
-                score += mean_iou_score(output.argmax(dim=1), label)
                 reg_loss += loss.item()
                 tracker.update(label, output.argmax(dim=1))
         val_loss[epoch] = reg_loss / len(val_loader.dataset)
         val_score[epoch] = tracker.get_result()
-
-        print('score =', score / len(val_loader.dataset))
 
         print(f'training loss = {train_loss[epoch]:.4f}, training score = {train_score[epoch]:.4f}')
         print(f'validation loss = {val_loss[epoch]:.4f}, validation score = {val_score[epoch]:.4f}')

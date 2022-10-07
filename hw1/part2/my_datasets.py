@@ -15,14 +15,14 @@ def read_masks(filepath):
         mask = imageio.imread(os.path.join(filepath, file))
         mask = (mask > 127).astype(np.int_)
         mask = 4 * mask[:, :, 0] + 2 * mask[:, :, 1] + mask[:, :, 2]
-        masks[i, mask == 3] = 0  # (Cyan: 011) Urban land
-        masks[i, mask == 6] = 1  # (Yellow: 110) Agriculture land
-        masks[i, mask == 5] = 2  # (Purple: 101) Rangeland
-        masks[i, mask == 2] = 3  # (Green: 010) Forest land
-        masks[i, mask == 1] = 4  # (Blue: 001) Water
-        masks[i, mask == 7] = 5  # (White: 111) Barren land
-        masks[i, mask == 0] = 6  # (Black: 000) Unknown
-        masks[i, mask == 4] = 6  # Undefined
+        masks[i, mask == 3] = 0     # (Cyan: 011) Urban land
+        masks[i, mask == 6] = 1     # (Yellow: 110) Agriculture land
+        masks[i, mask == 5] = 2     # (Purple: 101) Rangeland
+        masks[i, mask == 2] = 3     # (Green: 010) Forest land
+        masks[i, mask == 1] = 4     # (Blue: 001) Water
+        masks[i, mask == 7] = 5     # (White: 111) Barren land
+        masks[i, mask == 0] = 6     # (Black: 000) Unknown
+        masks[i, mask == 4] = 6     # Undefined
     return masks, file_list
 
 
@@ -31,6 +31,7 @@ class part2_dataset(Dataset):
         self.prefix = prefix
         self.trans = trans
         self.has_mask = has_mask
+        # RAM consuming way, but faster in training.
         self.masks, files = read_masks(prefix)
         self.images = [os.path.join(prefix, file.replace('mask.png', 'sat.jpg')) for file in files]
         print(f'Number of images is {len(self.images)}')
