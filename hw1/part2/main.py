@@ -15,7 +15,7 @@ def main():
     parser.add_argument('--data_root', type=str, default='./data/p2_data/')
     parser.add_argument('--num_classes', type=int, default=7)
     parser.add_argument('--batch_size', type=int, default=16)
-    parser.add_argument('--num_epochs', type=int, default=20)
+    parser.add_argument('--num_epochs', type=int, default=60)
     parser.add_argument('--learning_rate', type=float, default=0.0001)
     args = parser.parse_args()
 
@@ -36,6 +36,7 @@ def main():
     val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False)
 
     model = VGG16_FCN8(num_classes=args.num_classes)
+    # Ref: https://medium.com/ai-blog-tw/fd514176f805
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate)
     criterion = torch.nn.CrossEntropyLoss()
     model.to(device)
