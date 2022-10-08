@@ -20,9 +20,9 @@ class part1_dataset(Dataset):
     def __getitem__(self, idx):
         img_name = os.path.join(self.prefix, self.images[idx])
         label_name = self.labels[idx]
-        image = Image.open(img_name)
-        means = [0.4822673, 0.44025022, 0.38372642]
-        stds = [0.24469455, 0.23420024, 0.23852295]
+        image = Image.open(img_name).convert('RGB')
+        means = [0.5076548, 0.48128527, 0.43116662]
+        stds = [0.2627228, 0.25468898, 0.27363828]
         if self.training == True:
             trans = transforms.Compose([
                 transforms.ToTensor(),
