@@ -1,8 +1,5 @@
-import os
-
 import numpy as np
 import torch
-import torch.nn as nn
 from tqdm import tqdm
 
 
@@ -10,12 +7,14 @@ def save_model(model, path):
     print(f'Saving model to {path}...')
     torch.save(model.state_dict(), path)
 
+
 def load_parameters(model, path):
     print(f'Loading model parameters from {path}...')
     param = torch.load(path)
     model.load_state_dict(param)
     # TODO: model.to(device)
     # https://www.codenong.com/cs106326580/
+
 
 def train(model, train_loader, val_loader, num_epoch, device, criterion, optimizer, scheduler=None):
     train_loss = np.zeros(num_epoch, dtype=np.float32)
@@ -25,7 +24,7 @@ def train(model, train_loader, val_loader, num_epoch, device, criterion, optimiz
     best_acc = 0
 
     for epoch in range(num_epoch):
-        reg_loss = 0.0 
+        reg_loss = 0.0
         corr_num = 0
         model.train()
         for batch_idx, (data, label, ) in enumerate(tqdm(train_loader, postfix=f'epoch = {epoch}')):

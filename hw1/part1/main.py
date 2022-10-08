@@ -13,6 +13,7 @@ from tools import train
 def fix_seed():
     pass
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_root', type=str, default='./data/p1_data/')
@@ -30,7 +31,6 @@ def main():
     train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
     val_loader = DataLoader(val_set, batch_size=128, shuffle=False)
 
-
     model = myResNet50(num_out=args.num_out)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate)
     # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer)
@@ -38,6 +38,7 @@ def main():
     model.to(device)
     train(model, train_loader, val_loader, args.num_epochs, device, criterion, optimizer)
     return
+
 
 if __name__ == '__main__':
     main()

@@ -1,6 +1,6 @@
 import os
 
-from Pillow import Image
+from PIL import Image
 import numpy as np
 from torch.utils.data import Dataset
 
