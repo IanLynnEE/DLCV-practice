@@ -3,6 +3,7 @@ import argparse
 
 import torch
 from torch.utils.data import DataLoader
+from torchvision.transforms import transforms, InterpolationMode
 import matplotlib.pyplot as plt
 
 from myModels import myLeNet, myResNet50
@@ -26,15 +27,30 @@ def main():
 
     device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
 
-    train_set = part1_dataset(prefix=os.path.join(args.data_root, 'train_50'), training=True)
-    val_set = part1_dataset(prefix=os.path.join(args.data_root, 'val_50'))
-    train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
-    val_loader = DataLoader(val_set, batch_size=128, shuffle=False)
+    train_path = os.path.join(args.data_root, 'train_50')
+    valid_path = os.path.join(args.data_root, 'val_50')
+    means = [0.5076548, 0.48128527, 0.43116662]
+    stds = [0.2627228, 0.25468898, 0.27363828]
+    train_trans = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(means, stds),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomResizedCrop(224, interpolation=InterpolationMode.BICUBIC),
+    ])
+    valid_trans = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(means, stds),
+        transforms.Resize(224, interpolation=InterpolationMode.BICUBIC),
+    ])
 
     model = myResNet50(num_out=args.num_out)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate)
-    # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer)
     criterion = torch.nn.CrossEntropyLoss()
+
+    train_set = part1_dataset(prefix=train_path, trans=train_trans)
+    valid_set = part1_dataset(prefix=valid_path, trans=valid_trans)
+    train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
+    val_loader = DataLoader(valid_set, batch_size=128, shuffle=False)
     model.to(device)
     train(model, train_loader, val_loader, args.num_epochs, device, criterion, optimizer)
     return

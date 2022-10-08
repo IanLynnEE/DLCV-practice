@@ -16,7 +16,7 @@ def load_parameters(model, path):
     # https://www.codenong.com/cs106326580/
 
 
-def train(model, train_loader, val_loader, num_epoch, device, criterion, optimizer, scheduler=None):
+def train(model, train_loader, val_loader, num_epoch, device, criterion, optimizer):
     train_loss = np.zeros(num_epoch, dtype=np.float32)
     train_acc = np.zeros(num_epoch, dtype=np.float32)
     val_loss = np.zeros(num_epoch, dtype=np.float32)
@@ -34,15 +34,11 @@ def train(model, train_loader, val_loader, num_epoch, device, criterion, optimiz
             loss = criterion(output, label)
             optimizer.zero_grad()
             loss.backward()
-            # TODO: Drop if too large?
-            # nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.)
             optimizer.step()
             reg_loss += loss.item()
             reg_pred = output.argmax(dim=1)
             # Way to do comparison in tensor.
             corr_num += reg_pred.eq(label.view_as(reg_pred)).sum().item()
-        # TODO: Adjusting learning rate?
-        # scheduler.step()
         train_loss[epoch] = reg_loss / len(train_loader.dataset)
         train_acc[epoch] = corr_num / len(train_loader.dataset)
 
