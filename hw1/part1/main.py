@@ -11,10 +11,6 @@ from myDatasets import part1_dataset
 from tools import train
 
 
-def fix_seed():
-    pass
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_root', type=str, default='./data/p1_data/')
@@ -22,7 +18,6 @@ def main():
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--num_epochs', type=int, default=30)
     parser.add_argument('--learning_rate', type=float, default=0.01)
-    parser.add_argument('--seed', type=int, default=60470)
     args = parser.parse_args()
 
     device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
@@ -47,8 +42,8 @@ def main():
     optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate)
     criterion = torch.nn.CrossEntropyLoss()
 
-    train_set = part1_dataset(prefix=train_path, trans=train_trans)
-    valid_set = part1_dataset(prefix=valid_path, trans=valid_trans)
+    train_set = part1_dataset(prefix=train_path, trans=train_trans, has_label=True)
+    valid_set = part1_dataset(prefix=valid_path, trans=valid_trans, has_label=True)
     train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
     val_loader = DataLoader(valid_set, batch_size=128, shuffle=False)
     model.to(device)
