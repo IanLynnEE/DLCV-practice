@@ -1,6 +1,6 @@
 # Don't upload data
 data/
-save_models/
+saved_models/
 .vscode/
 
 # Byte-compiled / optimized / DLL files

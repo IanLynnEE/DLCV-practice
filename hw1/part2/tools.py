@@ -20,7 +20,7 @@ def train(model, train_loader, val_loader, num_epoch, device, criterion, optimiz
         reg_loss = 0.0
         tracker = MetricTracker()
         model.train()
-        for batch_idx, (data, label, ) in enumerate(tqdm(train_loader, postfix=f'epoch = {epoch}')):
+        for (data, label, ) in tqdm(train_loader, postfix=f'epoch = {epoch}'):
             data = data.to(device)
             label = label.to(device)
             output = model(data)
@@ -37,7 +37,7 @@ def train(model, train_loader, val_loader, num_epoch, device, criterion, optimiz
         tracker.reset()
         with torch.no_grad():
             model.eval()
-            for batch_idx, (data, label, ) in enumerate(val_loader):
+            for (data, label, ) in val_loader:
                 data = data.to(device)
                 label = label.to(device)
                 output = model(data)
@@ -52,8 +52,8 @@ def train(model, train_loader, val_loader, num_epoch, device, criterion, optimiz
 
         if val_score[epoch] > best_acc:
             best_acc = val_score[epoch]
-            save_model(model, './save_models/best_model.pt')
-        save_model(model, f'./save_models/{epoch}.pt')
+            save_model(model, './saved_models/best_model.pt')
+        save_model(model, f'./saved_models/{epoch}.pt')
 
 
 class MetricTracker:
