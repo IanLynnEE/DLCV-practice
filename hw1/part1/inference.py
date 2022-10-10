@@ -1,4 +1,3 @@
-import os
 import argparse
 
 import pandas as pd
@@ -51,7 +50,7 @@ def predict(model, dataloader, device):
 
     model.eval()
     with torch.no_grad():
-        for _, (data, filename) in enumerate(dataloader):
+        for (data, filename) in dataloader:
             data = data.to(device)
             output = model(data)
             pred = output.argmax(dim=1)
