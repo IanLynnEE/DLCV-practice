@@ -5,15 +5,13 @@ import numpy as np
 from torch.utils.data import Dataset
 
 
-def read_masks(filepath):
-    file_list = [file for file in os.listdir(filepath) if file.endswith('.png')]
-    file_list.sort()
+def read_masks(prefix, file_list):
     masks = np.empty((len(file_list), 512, 512), np.int_)
 
     for i, file in enumerate(file_list):
         # Pillow is much faster than imageio.
-        mask = Image.open(os.path.join(filepath, file)).convert('RGB')
-        mask = (mask > 127).astype(np.int_)
+        mask = Image.open(os.path.join(prefix, file)).convert('RGB')
+        mask = (np.asarray(mask) > 127).astype(np.int_)
         # As the dataset does not use Red: 100, it's okay to use:
         # mask = 3 * mask[:, :, 0] + 2 * mask[:, :, 1] + mask[:, :, 2]
         # But modifications are necessary for viz_mask.py by doing so.
@@ -34,17 +32,18 @@ class part2_dataset(Dataset):
         self.prefix = prefix
         self.trans = trans
         self.has_mask = has_mask
-        # RAM consuming way, but a bit faster in training.
-        self.masks, files = read_masks(prefix)
-        self.images = [os.path.join(prefix, file.replace('mask.png', 'sat.jpg')) for file in files]
+        self.images = [f for f in os.listdir(prefix) if f.endswith('.jpg')]
+        if has_mask is True:
+            self.masks = read_masks(prefix, self.images)  # RAM consuming but faster.
         print(f'Number of images is {len(self.images)}')
 
     def __len__(self):
         return len(self.images)
 
     def __getitem__(self, idx):
-        image = Image.open(self.images[idx]).convert('RGB')
+        image_path = os.path.join(self.prefix, self.images[idx])
+        image = Image.open(image_path).convert('RGB')
         image = self.trans(image)
-        if self.has_mask:
-            return image, self.masks[idx]
-        return image
+        if self.has_mask is True:
+            return image, self.masks[idx], self.images[idx]
+        return image, self.images[idx]
