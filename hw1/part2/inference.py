@@ -6,14 +6,14 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 from torchvision.utils import save_image
 
-from my_models import VGG16_FCN8s
+from my_models import VGG16_FCN8s, VGG16_FCN32s
 from my_datasets import part2_dataset
 
 
 def inference():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_root', type=str, default='./data/p2_data/validation')
-    parser.add_argument('--model_path', type=str, default='./saved_models/VGG16_best.pt')
+    parser.add_argument('--model_path', type=str, default='./saved_models/VGG16_FCN8s.pt')
     parser.add_argument('--out_root', type=str, default='./data/p2_data/prediction')
     args = parser.parse_args()
 
@@ -39,7 +39,7 @@ def inference():
     preds, filenames = predict(model, dataloader, device)
     rgb_masks = label2rgb(preds)
     for i, pred in enumerate(rgb_masks):
-        filename = filenames[i].replace('jpg', 'png')
+        filename = filenames[i].replace('_sat.jpg', '.png')
         save_image(pred, os.path.join(args.out_root, filename))
     return
 
