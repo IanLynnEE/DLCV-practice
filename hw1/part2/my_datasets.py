@@ -9,8 +9,9 @@ def read_masks(prefix, file_list):
     masks = np.empty((len(file_list), 512, 512), np.int_)
 
     for i, file in enumerate(file_list):
+        mask_name = file.replace('sat.jpg', 'mask.png')
         # Pillow is much faster than imageio.
-        mask = Image.open(os.path.join(prefix, file)).convert('RGB')
+        mask = Image.open(os.path.join(prefix, mask_name)).convert('RGB')
         mask = (np.asarray(mask) > 127).astype(np.int_)
         # As the dataset does not use Red: 100, it's okay to use:
         # mask = 3 * mask[:, :, 0] + 2 * mask[:, :, 1] + mask[:, :, 2]
