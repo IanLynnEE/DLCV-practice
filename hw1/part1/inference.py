@@ -12,7 +12,7 @@ from myDatasets import part1_dataset
 def inference():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_root', type=str, default='./data/p1_data/val_50')
-    parser.add_argument('--model_path', type=str, default='./saved_models/ResNet50_best.pt')
+    parser.add_argument('--model_path', type=str, default='./saved_models/ResNet50.pt')
     parser.add_argument('--out_path', type=str, default='./val_gt.csv')
     args = parser.parse_args()
 
