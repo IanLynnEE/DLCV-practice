@@ -6,8 +6,8 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 
-from myModels import myLeNet
-from myDatasets import part1_dataset
+from my_models import myLeNet
+from my_datasets import part1_dataset
 
 
 def visualize():

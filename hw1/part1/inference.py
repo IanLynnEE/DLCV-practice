@@ -5,8 +5,8 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms, InterpolationMode
 
-from myModels import myResNet50
-from myDatasets import part1_dataset
+from my_models import myResNet50
+from my_datasets import part1_dataset
 
 
 def inference():

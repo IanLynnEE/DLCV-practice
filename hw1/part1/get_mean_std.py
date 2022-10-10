@@ -1,7 +1,7 @@
 from torch.utils.data import DataLoader
 import numpy as np
 
-from myDatasets import part1_dataset
+from my_datasets import part1_dataset
 
 
 def get_mean_std(dataset):

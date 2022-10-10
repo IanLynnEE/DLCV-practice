@@ -6,8 +6,8 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import transforms, InterpolationMode
 import matplotlib.pyplot as plt
 
-from myModels import myLeNet, myResNet50
-from myDatasets import part1_dataset
+from my_models import myLeNet, myResNet50
+from my_datasets import part1_dataset
 from tools import train
 
 
