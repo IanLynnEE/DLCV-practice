@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 
-from my_models import VGG16_FCN32, VGG16_FCN8
+from my_models import VGG16_FCN32s, VGG16_FCN8s
 from my_datasets import part2_dataset
 from tools import train
 
@@ -35,7 +35,7 @@ def main():
     train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
     val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False)
 
-    model = VGG16_FCN8(num_classes=args.num_classes)
+    model = VGG16_FCN8s(num_classes=args.num_classes)
     # Ref: https://medium.com/ai-blog-tw/fd514176f805
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate)
     criterion = torch.nn.CrossEntropyLoss()

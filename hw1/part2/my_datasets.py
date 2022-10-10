@@ -24,7 +24,7 @@ def read_masks(prefix, file_list):
         masks[i, mask == 7] = 5     # (White: 111) Barren land
         masks[i, mask == 0] = 6     # (Black: 000) Unknown
         masks[i, mask == 4] = 6     # Undefined
-    return masks, file_list
+    return masks
 
 
 class part2_dataset(Dataset):

@@ -20,7 +20,7 @@ def train(model, train_loader, val_loader, num_epoch, device, criterion, optimiz
         reg_loss = 0.0
         tracker = MetricTracker()
         model.train()
-        for (data, label, ) in tqdm(train_loader, postfix=f'epoch = {epoch}'):
+        for data, label, _ in tqdm(train_loader, postfix=f'epoch = {epoch}'):
             data = data.to(device)
             label = label.to(device)
             output = model(data)
@@ -37,7 +37,7 @@ def train(model, train_loader, val_loader, num_epoch, device, criterion, optimiz
         tracker.reset()
         with torch.no_grad():
             model.eval()
-            for (data, label, ) in val_loader:
+            for data, label, _ in val_loader:
                 data = data.to(device)
                 label = label.to(device)
                 output = model(data)

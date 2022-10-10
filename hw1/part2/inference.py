@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 from torchvision.utils import save_image
 
-from my_models import VGG16_FCN8
+from my_models import VGG16_FCN8s
 from my_datasets import part2_dataset
 
 
@@ -29,7 +29,7 @@ def inference():
     dataset = part2_dataset(prefix=args.data_root, trans=trans, has_mask=False)
     dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 
-    model = VGG16_FCN8(num_classes=7)
+    model = VGG16_FCN8s(num_classes=7)
     checkpoint = torch.load(args.model_path)
     model.load_state_dict(checkpoint)
 

@@ -2,7 +2,7 @@ import torch.nn as nn
 from torchvision.models import vgg16, VGG16_Weights
 
 
-class VGG16_FCN32(nn.Module):
+class VGG16_FCN32s(nn.Module):
     def __init__(self, num_classes=7):
         super().__init__()
         self.vgg16_features = vgg16(weights=VGG16_Weights.IMAGENET1K_FEATURES).features
@@ -31,7 +31,7 @@ class VGG16_FCN32(nn.Module):
         return x
 
 
-class VGG16_FCN8(nn.Module):
+class VGG16_FCN8s(nn.Module):
     def __init__(self, num_classes=7):
         super().__init__()
         self.feats = vgg16(weights=VGG16_Weights.IMAGENET1K_FEATURES).features
@@ -45,6 +45,8 @@ class VGG16_FCN8(nn.Module):
             nn.Dropout2d(),
             nn.Conv2d(in_channels=4096, out_channels=num_classes, kernel_size=1)
         )
+        # Codes on the internet use different methods here.
+        # They tend to do cross-channels transform before upsampling.
         self.upsample4 = nn.ConvTranspose2d(num_classes, 256, 8, stride=4, bias=False)
         self.upsample2 = nn.ConvTranspose2d(512, 256, 2, stride=2, bias=False)
         self.upsample8 = nn.ConvTranspose2d(256, num_classes, 8, stride=8, bias=False)
