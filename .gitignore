@@ -1,5 +1,6 @@
 # Don't upload data
 data/
+hw2_data/
 saved_models/
 .vscode/
 
