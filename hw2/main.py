@@ -14,9 +14,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_root', type=str, default='./hw2_data/face/')
     parser.add_argument('--num_classes', type=int, default=10)
-    parser.add_argument('--batch_size', type=int, default=128)
+    parser.add_argument('--batch_size', type=int, default=256)
     parser.add_argument('--num_epochs', type=int, default=100)
-    parser.add_argument('--learning_rate', type=float, default=0.0001)
+    parser.add_argument('--learning_rate', type=float, default=0.0004)
     args = parser.parse_args()
 
     device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
