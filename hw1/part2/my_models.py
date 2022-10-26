@@ -48,8 +48,10 @@ class VGG16_FCN8s(nn.Module):
         # Codes on the internet use different methods here.
         # They tend to do cross-channels transform before upsampling.
         self.upsample4 = nn.ConvTranspose2d(num_classes, 256, 8, stride=4, bias=False)
+        # Setting kernel_size=1 of first layer of classifier and kernel_size=4 here does not work well.
         self.upsample2 = nn.ConvTranspose2d(512, 256, 2, stride=2, bias=False)
         self.upsample8 = nn.ConvTranspose2d(256, num_classes, 8, stride=8, bias=False)
+        # set some param.requires_grad = False does not work either.
 
     def forward(self, x):
         for idx, feature in enumerate(self.feats):
