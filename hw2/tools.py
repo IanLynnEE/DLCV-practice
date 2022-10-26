@@ -1,9 +1,9 @@
-import subprocess
-
 import torch
-from torchvision.utils import save_image 
+from torchvision.utils import save_image
 from tqdm import tqdm
 from pytorch_fid.fid_score import calculate_fid_given_paths
+
+from face_recog import face_recog
 
 
 def fix_seed(seed):
@@ -16,7 +16,7 @@ def save_model(model, path):
     torch.save(model.state_dict(), path)
 
 
-def train_GAN(device, loader, models, criterions, optimizers, epochs, batch_size):
+def train_GAN(device, loader, models, criterions, optimizers, epochs):
     # TODO: Tensorboard?
     best_score = 0.0
 
@@ -34,12 +34,13 @@ def train_GAN(device, loader, models, criterions, optimizers, epochs, batch_size
 
         for data in tqdm(loader, postfix=f'epoch = {epoch}'):
             data = data.to(device)
+            batch_size = data.size(0)
 
             # TODO: Add noise to the discriminator?
-            label_real = 1.0 - 0.3 * torch.rand((batch_size,), dtype=torch.float, device=device)
-            label_fake = 0.0 + 0.3 * torch.rand((batch_size,), dtype=torch.float, device=device)
+            label_real = 1.0 - 0.3 * torch.rand((batch_size, 1, 1, 1), dtype=torch.float, device=device)
+            label_fake = 0.0 + 0.3 * torch.rand((batch_size, 1, 1, 1), dtype=torch.float, device=device)
             noise = torch.randn((batch_size, 100, 1, 1), device=device)
-            
+
             # Train discriminator
             optimizer_d.zero_grad()
             output = discriminator(data)
@@ -50,7 +51,7 @@ def train_GAN(device, loader, models, criterions, optimizers, epochs, batch_size
             loss_d_fake = criterions[1](output, label_fake)
 
             loss_d = loss_d_real + loss_d_fake
-            loss_d.backward()
+            loss_d.backward(retain_graph=True)
             optimizer_d.step()
 
             # Train generator
@@ -66,14 +67,14 @@ def train_GAN(device, loader, models, criterions, optimizers, epochs, batch_size
             noise = torch.randn((1000, 100, 1, 1), device=device)
             output = generator(noise)
             for i, image in enumerate(output):
-                save_image((image + 1) / 2, f'outputs/hw2_1/{i:4d}.png')
+                save_image(image, f'outputs/hw2_1/{i:04d}.png')
 
-        # TODO: Two subprocesses to calculate score
         fid = calculate_fid_given_paths(
-                ('outputs/hw2_1/','hw2_data/face/test/'),
-                32,
-                device,
-                2048,
-                4
-            )
-        subprocess.run(['python', 'face_recog.py', '--image_dir', 'outputs/hw2_1/'])
+            ('outputs/hw2_1/', 'hw2_data/face/val/'),
+            32,
+            device,
+            2048,
+            4
+        )
+        hog = face_recog('outputs/hw2_1/')
+        print(f'fid = {fid:3.2f}, hog = {hog:3.2f}')

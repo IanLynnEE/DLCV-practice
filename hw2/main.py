@@ -21,11 +21,13 @@ def main():
 
     device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
 
-    means = [0.40851322, 0.37851325, 0.28088534]
-    stds = [0.14234462, 0.10848372, 0.09824718]
+    # https://gist.github.com/weiaicunzai/e623931921efefd4c331622c344d8151
+    means = [0.5071, 0.4865, 0.4409]
+    stds = [0.2673, 0.2564, 0.2762]
     trans = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(means, stds),
+        transforms.RandomHorizontalFlip(),
     ])
     train_dir = os.path.join(args.data_root, 'train')
     train_set = FaceDataset(prefix=train_dir, trans=trans)
@@ -33,7 +35,6 @@ def main():
 
     gen = DCGANGenerator()
     dis = DCGANDiscriminator()
-    # models = (DCGANGenerator(), DCGANDiscriminator())
     optimizers = (
         torch.optim.AdamW(gen.parameters(), lr=args.learning_rate),
         torch.optim.AdamW(dis.parameters(), lr=args.learning_rate)
@@ -42,7 +43,7 @@ def main():
         torch.nn.BCELoss(),
         torch.nn.BCELoss()
     )
-    train_GAN(device, loader, (gen, dis), criterions, optimizers, args.num_epochs, args.batch_size)
+    train_GAN(device, loader, (gen, dis), criterions, optimizers, args.num_epochs)
     return
 
 
