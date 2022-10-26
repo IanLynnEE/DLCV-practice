@@ -10,10 +10,18 @@ def fix_seed(seed):
     pass
 
 
-def save_model(model, path):
+def save_checkpoint(epoch, model, optimizer, loss, prefix):
+    path = f'{prefix}/{model.__class__.__name__}_{epoch}.pt'
     print(f'Saving model to {path}...')
-    # TODO: Need to use better method.
-    torch.save(model.state_dict(), path)
+    torch.save(
+        {
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss,
+        },
+        path
+    )
 
 
 def train_GAN(device, loader, models, criterions, optimizers, epochs):
@@ -78,3 +86,6 @@ def train_GAN(device, loader, models, criterions, optimizers, epochs):
         )
         hog = face_recog('outputs/hw2_1/')
         print(f'fid = {fid:3.2f}, hog = {hog:3.2f}')
+
+        save_checkpoint(epoch, generator, optimizer_g, loss_g, 'DCGAN')
+        save_checkpoint(epoch, discriminator, optimizer_d, loss_d, 'DCGAN')
