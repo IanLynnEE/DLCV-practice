@@ -63,7 +63,7 @@ def predict(model, dataloader, device):
 def label2rgb(labels):
     rgb = torch.zeros(labels.size(0), 3, labels.size(1), labels.size(2))
 
-    remap_masks = labels.to(torch.int8)
+    remap_masks = labels.clone()
     remap_masks[labels == 0] = 3    # (Cyan: 011) Urban land
     remap_masks[labels == 1] = 6    # (Yellow: 110) Agriculture land
     remap_masks[labels == 2] = 5    # (Purple: 101) Rangeland
@@ -72,13 +72,15 @@ def label2rgb(labels):
     remap_masks[labels == 5] = 7    # (White: 111) Barren land
     remap_masks[labels == 6] = 0    # (Black: 000) Unknown
 
-    rgb[:, 0, :, :] = remap_masks // 4
+    rgb[:, 0, :, :] = torch.div(remap_masks, 4, rounding_mode='floor')
     remap_masks = remap_masks % 4
-    rgb[:, 1, :, :] = remap_masks // 2
+    rgb[:, 1, :, :] = torch.div(remap_masks, 2, rounding_mode='floor')
     remap_masks = remap_masks % 2
     rgb[:, 2, :, :] = remap_masks
-
-    return rgb * 255
+    # Inside torch.utils.save_image():
+    # grid.mul(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to("cpu", torch.uint8).numpy()
+    # So it use openCV BGR instead of RGB.
+    return rgb
 
 
 if __name__ == '__main__':
