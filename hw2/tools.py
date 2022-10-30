@@ -47,7 +47,7 @@ def optimizer_to(optim, device):
     return
 
 
-def train_GAN(device, loader, models, criterions, optimizers, epochs):
+def train_DCGAN(device, loader, models, criterions, optimizers, epochs):
     writer = SummaryWriter('saved_models/')
     best_score = 0.0
 
@@ -124,5 +124,98 @@ def train_GAN(device, loader, models, criterions, optimizers, epochs):
         if (epoch % 5 == 0) or (best_score < fid):
             save_checkpoint(epoch, generator, optimizer_g)
             save_checkpoint(epoch, discriminator, optimizer_d)
-            best_score = fid if best_score < fid else None
+            best_score = fid if best_score < fid else best_score
+    writer.close()
+
+
+def train_DANN(device, loaders, models, criterions, optimizers, epochs, weight):
+    writer = SummaryWriter('saved_models/')
+    best_score = 0.0
+
+    for model in models:
+        model.to(device)
+
+    for optimizer in optimizers:
+        optimizer_to(optimizer, device)
+
+    for epoch in epochs:
+        sum_loss_class = 0.0
+        sum_loss_domain = 0.0
+        sum_loss = 0.0
+        sum_loss_class_valid = 0.0
+        num_correct = 0
+
+        target_iter = iter(loaders[1])
+        for model in models:
+            model.train()
+        for source, label_class in tqdm(loaders[0], postfix=f'epoch = {epoch}'):
+            source = source.to(device)
+            label_class = label_class.to(device)
+
+            # Get mini-batch of target images
+            try:
+                target = next(target_iter)
+            except StopIteration:
+                target_iter = iter(loaders[1])
+                target = next(target_iter)
+            target = target[0].to(device)
+
+            # Soft domain labels
+            label_positive = 1.0 - 0.3 * torch.rand((source.size(0), 1), dtype=torch.float, device=device)
+            label_negative = 0.0 + 0.3 * torch.rand((target.size(0), 1), dtype=torch.float, device=device)
+
+            # Cat source and target
+            data = torch.cat([source, target], dim=0)
+            label_domain = torch.cat([label_positive, label_negative], dim=0)
+
+            # Get feature
+            feature = models[0](data)
+            feature_source = feature[:source.size(0)]
+
+            # Train domain classifier
+            optimizers[2].zero_grad()
+            output = models[2](feature)
+            loss_domain = criterions[2](output, label_domain)
+            loss_domain.backward(retain_graph=True)
+            sum_loss_domain += loss_domain.item()
+            optimizers[2].step()
+
+            # Train feature extractor and class classifier
+            optimizers[0].zero_grad()
+            optimizers[1].zero_grad()
+            output = models[1](feature_source)
+            loss_class = criterions[1](output, label_class)
+            output = models[2](feature)
+            loss_domain = criterions[2](output, label_domain)
+            loss = loss_class - weight * loss_domain
+            loss.backward()
+            sum_loss_class += loss_class.item()
+            sum_loss += loss.item()
+            optimizers[0].step()
+            optimizers[1].step()
+
+        for model in models:
+            model.eval()
+        with torch.no_grad():
+            for data, label in loaders[2]:
+                data = data.to(device)
+                label = label.to(device)
+                output = models[1](models[0](data))
+                loss = criterions[1](output, label)
+                sum_loss_class_valid += loss.item()
+                pred = output.argmax(dim=1)
+                num_correct += pred.eq(label.view_as(pred)).sum().item()
+
+        writer.add_scalar('loss/loss_domain', sum_loss_domain, epoch)
+        writer.add_scalar('loss/loss_class', sum_loss_class, epoch)
+        writer.add_scalar('loss/loss_total', sum_loss, epoch)
+        writer.add_scalar('loss/loss_valid', sum_loss_class_valid, epoch)
+        writer.add_scalar('accuracy', num_correct / len(loaders[2].dataset), epoch)
+        print(f'epoch = {epoch}, accuracy = {num_correct / len(loaders[2].dataset)}')
+
+        if (epoch % 10 == 0) or (best_score < num_correct):
+            save_checkpoint(epoch, models[0], optimizers[0])
+            save_checkpoint(epoch, models[1], optimizers[1])
+            save_checkpoint(epoch, models[2], optimizers[2])
+            best_score = num_correct if best_score < num_correct else best_score
     writer.close()

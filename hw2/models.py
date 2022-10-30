@@ -65,3 +65,73 @@ class DCGANDiscriminator(nn.Module):
         elif classname.find('BatchNorm') != -1:
             nn.init.normal_(model.weight.data, 1.0, 0.02)
             nn.init.constant_(model.bias.data, 0)
+
+
+class DANNFeature(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.feature = nn.Sequential(
+            nn.Conv2d(3, 64, 3, 1, 1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(True),
+            nn.MaxPool2d(2),
+            nn.Conv2d(64, 128, 3, 1, 1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(True),
+            nn.MaxPool2d(2),
+            nn.Conv2d(128, 256, 3, 1, 1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True),
+            nn.MaxPool2d(2),
+            nn.Conv2d(256, 256, 3, 1, 1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True),
+            nn.MaxPool2d(2),
+            nn.Conv2d(256, 512, 3, 1, 1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(True),
+            nn.MaxPool2d(2)
+        )
+
+    def forward(self, input):
+        return self.feature(input).squeeze()
+
+
+class DANNLabel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.classifier = nn.Sequential(
+            nn.Linear(512, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(),
+            nn.Linear(512, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(),
+            nn.Linear(512, 10)
+        )
+
+    def forward(self, input):
+        return self.classifier(input)
+
+
+class DANNDomain(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.classifier = nn.Sequential(
+            nn.Linear(512, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(),
+            nn.Linear(512, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(),
+            nn.Linear(512, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(),
+            nn.Linear(512, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(),
+            nn.Linear(512, 1)
+        )
+
+    def forward(self, input):
+        return self.classifier(input)
