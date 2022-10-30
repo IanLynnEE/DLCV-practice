@@ -128,6 +128,10 @@ def train_DCGAN(device, loader, models, criterions, optimizers, epochs):
     writer.close()
 
 
+def train_DDPM(device, loader, models, criterions, optimizers, epochs):
+    pass
+
+
 def train_DANN(device, loaders, models, criterions, optimizers, epochs, weight):
     writer = SummaryWriter('saved_models/')
     best_score = 0.0
@@ -219,3 +223,15 @@ def train_DANN(device, loaders, models, criterions, optimizers, epochs, weight):
             save_checkpoint(epoch, models[2], optimizers[2])
             best_score = num_correct if best_score < num_correct else best_score
     writer.close()
+
+
+class Config:
+    def __init__(self):
+        self.source = None
+        self.target = None
+        self.valid = None
+        self.epochs = 1
+        self.batch_size = 16
+        self.lr = 0.0001
+        self.lambda_ = 0.05
+        self.use_checkpoint = False
