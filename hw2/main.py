@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 
 from models import DCGANGenerator, DCGANDiscriminator
+from models import UNet
 from models import DANNFeature, DANNLabel, DANNDomain
 from datasets import FaceDataset, DigitDataset
 from tools import Config
@@ -31,8 +32,8 @@ def main():
 
     elif 'digits' in args.target:
         config.source = './hw2_data/digits/mnistm/data/'
-        config.batch_size = 256
-        config.epochs = 100
+        config.batch_size = 128
+        config.epochs = 80000
         config.lr = 0.0004
         train_DDPM(device, *setup_DDPM(config))
 
