@@ -31,7 +31,7 @@ def main():
         train_DCGAN(device, *setup_DCGAN(config))
 
     elif 'digits' in args.target:
-        config.source = './hw2_data/digits/mnistm/data/'
+        config.source = './hw2_data/digits/mnistm/train.csv'    # Not allow to use all images.
         config.batch_size = 128
         config.epochs = 80000
         config.lr = 0.0004
@@ -95,16 +95,26 @@ def setup_DCGAN(config):
 
 
 def setup_DDPM(config):
-    pass
-
-
-def setup_DANN(config):
-    means = [0.5071, 0.4865, 0.4409]
-    stds = [0.2673, 0.2564, 0.2762]
+    mean = [0.4632221, 0.4668803, 0.41948238]
+    std = [0.2537196, 0.23820335, 0.2622173]
     trans = transforms.Compose([
         transforms.Resize(32),
         transforms.ToTensor(),
-        transforms.Normalize(means, stds),
+        transforms.Normalize(mean, std),
+    ])
+    source_set = DigitDataset(prefix=config.source, trans=trans, labeled=True)
+    source = DataLoader(source_set, batch_size=config.batch_size, shuffle=True)
+    # TODO
+    return
+
+
+def setup_DANN(config):
+    mean = [0.4632221, 0.4668803, 0.41948238]
+    std = [0.2537196, 0.23820335, 0.2622173]
+    trans = transforms.Compose([
+        transforms.Resize(32),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std),
     ])
     source_set = DigitDataset(prefix=config.source, trans=trans, labeled=True)
     target_set = DigitDataset(prefix=config.target, trans=trans, labeled=False)
