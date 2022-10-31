@@ -64,7 +64,7 @@ def optimizer_to(optim, device):
     return
 
 
-def train_DCGAN(device, loader, models, criterions, optimizers, epochs):
+def train_DCGAN(device, loader, models, criterions, optimizers, epochs, post_trans):
     writer = SummaryWriter('saved_models/')
     best_score = 0.0
 
@@ -122,7 +122,7 @@ def train_DCGAN(device, loader, models, criterions, optimizers, epochs):
             noise = torch.randn((1000, 100, 1, 1), device=device)
             output = generator(noise)
             for i, image in enumerate(output):
-                save_image(image, f'outputs/hw2_1/{i:04d}.png')
+                save_image(post_trans(image), f'outputs/hw2_1/{i:04d}.png')
 
         fid = calculate_fid_given_paths(
             ('outputs/hw2_1/', 'hw2_data/face/val/'),
