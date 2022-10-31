@@ -7,6 +7,18 @@ from pytorch_fid.fid_score import calculate_fid_given_paths
 from face_recog import face_recog
 
 
+class Config:
+    def __init__(self):
+        self.source = None
+        self.target = None
+        self.valid = None
+        self.epochs = 1
+        self.batch_size = 16
+        self.lr = 0.0001
+        self.lambda_ = 0.05
+        self.use_checkpoint = False
+
+
 def fix_seed(seed):
     pass
 
@@ -121,18 +133,14 @@ def train_DCGAN(device, loader, models, criterions, optimizers, epochs):
         writer.add_scalar('FID', fid, epoch)
         writer.add_scalar('HOG', hog, epoch)
 
-        if (epoch % 5 == 0) or (best_score < fid):
+        if (epoch % 10 == 0) or (best_score < hog):
             save_checkpoint(epoch, generator, optimizer_g)
             save_checkpoint(epoch, discriminator, optimizer_d)
-            best_score = fid if best_score < fid else best_score
+            best_score = hog if best_score < hog else best_score
     writer.close()
 
 
-def train_DDPM(device, loader, models, criterions, optimizers, epochs):
-    pass
-
-
-def train_DANN(device, loaders, models, criterions, optimizers, epochs, weight):
+def train_DANN(device, loaders, models, criterions, optimizers, epochs, lambda_):
     writer = SummaryWriter('saved_models/')
     best_score = 0.0
 
@@ -142,6 +150,7 @@ def train_DANN(device, loaders, models, criterions, optimizers, epochs, weight):
     for optimizer in optimizers:
         optimizer_to(optimizer, device)
 
+    target_iter = iter(loaders[1])
     for epoch in epochs:
         sum_loss_class = 0.0
         sum_loss_domain = 0.0
@@ -149,7 +158,6 @@ def train_DANN(device, loaders, models, criterions, optimizers, epochs, weight):
         sum_loss_class_valid = 0.0
         num_correct = 0
 
-        target_iter = iter(loaders[1])
         for model in models:
             model.train()
         for source, label_class in tqdm(loaders[0], postfix=f'epoch = {epoch}'):
@@ -191,7 +199,7 @@ def train_DANN(device, loaders, models, criterions, optimizers, epochs, weight):
             loss_class = criterions[1](output, label_class)
             output = models[2](feature)
             loss_domain = criterions[2](output, label_domain)
-            loss = loss_class - weight * loss_domain
+            loss = loss_class - lambda_ * loss_domain
             loss.backward()
             sum_loss_class += loss_class.item()
             sum_loss += loss.item()
@@ -225,13 +233,5 @@ def train_DANN(device, loaders, models, criterions, optimizers, epochs, weight):
     writer.close()
 
 
-class Config:
-    def __init__(self):
-        self.source = None
-        self.target = None
-        self.valid = None
-        self.epochs = 1
-        self.batch_size = 16
-        self.lr = 0.0001
-        self.lambda_ = 0.05
-        self.use_checkpoint = False
+def train_DDPM(device, loader, models, criterions, optimizers, epochs):
+    pass

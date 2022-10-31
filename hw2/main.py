@@ -42,7 +42,7 @@ def main():
         config.target = 'hw2_data/digits/usps/train.csv'
         config.valid = 'hw2_data/digits/usps/val.csv'
         config.batch_size = 256
-        config.epochs = 100
+        config.epochs = 20
         config.lr = 0.001
         config.lambda_ = 0.05
         train_DANN(device, *setup_DANN(config), config.lambda_)
@@ -52,9 +52,9 @@ def main():
         config.target = 'hw2_data/digits/svhn/train.csv'
         config.valid = 'hw2_data/digits/svhn/val.csv'
         config.batch_size = 256
-        config.epochs = 100
+        config.epochs = 40
         config.lr = 0.001
-        config.lambda_ = 0.05
+        config.lambda_ = 0.1
         train_DANN(device, *setup_DANN(config), config.lambda_)
     return
 
@@ -84,10 +84,10 @@ def setup_DCGAN(config):
         torch.optim.AdamW(models[1].parameters(), lr=config.lr)
     )
     epochs = range(config.epochs)
-    if config.use_checkpoint == 'DCGAN':
-        path = './saved_models/DCGANGenerator.pt'
+    if 'DCGAN' in config.use_checkpoint:
+        path = os.path.join(config.use_checkpoint, 'DCGANGenerator.pt')
         epoch = load_checkpoint(path, models[0], optimizers[0])
-        path = './saved_models/DCGANDiscriminator.pt'
+        path = os.path.jion(config.use_checkpoint, 'DCGANDiscriminator.pt')
         if epoch != load_checkpoint(path, models[1], optimizers[1]):
             print('Warning: Using checkpoints from different epoch')
         epochs = range(epoch + 1, epoch + 1 + config.epochs)
