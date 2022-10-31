@@ -14,7 +14,11 @@ class Config:
         self.valid = None
         self.epochs = 1
         self.batch_size = 16
-        self.lr = 0.0001
+        self.lr = 0.001
+        self.lr1 = 0.001
+        self.lr2 = 0.001
+        self.beta1 = 0.9
+        self.beta2 = 0.999
         self.lambda_ = 0.05
         self.use_checkpoint = False
 
@@ -40,6 +44,7 @@ def load_checkpoint(path, model, optimizer):
     checkpoint = torch.load(path)
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    print(model.state_dict, optimizer.state_dict)
     return checkpoint['epoch']
 
 

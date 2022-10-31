@@ -28,6 +28,8 @@ def main():
         config.batch_size = 256
         config.epochs = 100
         config.lr = 0.0004
+        config.beta1 = 0.5
+        config.lr1 = 0.01
         train_DCGAN(device, *setup_DCGAN(config))
 
     elif 'digits' in args.target:
@@ -80,14 +82,14 @@ def setup_DCGAN(config):
         torch.nn.BCELoss()
     )
     optimizers = (
-        torch.optim.AdamW(models[0].parameters(), lr=config.lr),
-        torch.optim.SGD(models[1].parameters(), lr=config.lr)
+        torch.optim.AdamW(models[0].parameters(), lr=config.lr, betas=(config.beta1, config.beta2)),
+        torch.optim.SGD(models[1].parameters(), lr=config.lr1)
     )
     epochs = range(config.epochs)
     if 'DCGAN' in config.use_checkpoint:
         path = os.path.join(config.use_checkpoint, 'DCGANGenerator.pt')
         epoch = load_checkpoint(path, models[0], optimizers[0])
-        path = os.path.jion(config.use_checkpoint, 'DCGANDiscriminator.pt')
+        path = os.path.join(config.use_checkpoint, 'DCGANDiscriminator.pt')
         if epoch != load_checkpoint(path, models[1], optimizers[1]):
             print('Warning: Using checkpoints from different epoch')
         epochs = range(epoch + 1, epoch + 1 + config.epochs)
