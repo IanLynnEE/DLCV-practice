@@ -91,6 +91,7 @@ def train_DCGAN(device, loader, models, criterions, optimizers, epochs):
 
             positive = 1.0 - 0.3 * torch.rand((batch_size, 1, 1, 1), dtype=torch.float, device=device)
             negative = 0.0 + 0.3 * torch.rand((batch_size, 1, 1, 1), dtype=torch.float, device=device)
+            ones = torch.ones((batch_size, 1, 1, 1), dtype=torch.float, device=device)
             noise = torch.randn((batch_size, 100, 1, 1), device=device)
 
             # Train discriminator
@@ -111,7 +112,7 @@ def train_DCGAN(device, loader, models, criterions, optimizers, epochs):
             # Train generator
             optimizer_g.zero_grad()
             output = discriminator(image_fake)
-            loss_g = criterions[0](output, positive)
+            loss_g = criterions[0](output, ones)
             sum_loss_g += loss_g.item()
             loss_g.backward()
             optimizer_g.step()
