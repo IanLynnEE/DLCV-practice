@@ -81,7 +81,7 @@ def setup_DCGAN(config):
     )
     optimizers = (
         torch.optim.AdamW(models[0].parameters(), lr=config.lr),
-        torch.optim.AdamW(models[1].parameters(), lr=config.lr)
+        torch.optim.SGD(models[1].parameters(), lr=config.lr)
     )
     epochs = range(config.epochs)
     if 'DCGAN' in config.use_checkpoint:
