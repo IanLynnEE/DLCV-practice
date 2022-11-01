@@ -64,8 +64,8 @@ def main():
 
 def setup_DCGAN(config):
     # https://gist.github.com/weiaicunzai/e623931921efefd4c331622c344d8151
-    mean = np.array((0.5071, 0.4865, 0.4409))
-    std = np.array((0.2673, 0.2564, 0.2762))
+    mean = np.array((0.5, 0.5, 0.5))
+    std = np.array((0.5, 0.5, 0.5))
     trans = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean, std),

@@ -126,7 +126,7 @@ def train_DCGAN(device, loader, models, criterions, optimizers, epochs, post_tra
 
         fid = calculate_fid_given_paths(
             ('outputs/hw2_1/', 'hw2_data/face/val/'),
-            32,
+            50,
             device,
             2048
         )
@@ -139,7 +139,7 @@ def train_DCGAN(device, loader, models, criterions, optimizers, epochs, post_tra
         writer.add_scalar('FID', fid, epoch)
         writer.add_scalar('HOG', hog, epoch)
 
-        if (epoch % 10 == 0) or (best_score < hog):
+        if (epoch % 5 == 4) or (best_score < hog):
             save_checkpoint(epoch, generator, optimizer_g)
             save_checkpoint(epoch, discriminator, optimizer_d)
             best_score = hog if best_score < hog else best_score
