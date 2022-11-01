@@ -1,10 +1,8 @@
 import os
-import numpy as np
 import argparse
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torchvision.transforms as transforms
 from torch.utils.data import Dataset
 from PIL import Image
@@ -52,41 +50,32 @@ class Classifier(nn.Module):
 		self.fc3 = nn.Linear(64, 10)
 
 	def forward(self, x):
-		x = self.pool(F.relu(self.conv1(x)))
-		x = self.pool(F.relu(self.conv2(x)))
+		x = self.pool(nn.functional.relu(self.conv1(x)))
+		x = self.pool(nn.functional.relu(self.conv2(x)))
 		x = torch.flatten(x, 1) # flatten all dimensions except batch
-		x = F.relu(self.fc1(x))
-		x = F.relu(self.fc2(x))
+		x = nn.functional.relu(self.fc1(x))
+		x = nn.functional.relu(self.fc2(x))
 		x = self.fc3(x)
 		return x
 
-
-if __name__ == '__main__':
-
-	#print('===> prepare classifier ...')
+def classify_dir(prefix, model_path='./Classifier.pth'):
 	net = Classifier()
-	path = "./Classifier.pth"
-	load_checkpoint(path, net)
+	load_checkpoint(model_path, net)
 
-	# GPU enable
 	use_cuda = torch.cuda.is_available()
 	device = torch.device("cuda" if use_cuda else "cpu")
-	#print('Device used:', device)
 	net = net.to(device)
 
-	parser = argparse.ArgumentParser()
-	parser.add_argument("--folder", help="path to the folder for output images", type=str)
-	args = parser.parse_args()
-
-	data_loader = torch.utils.data.DataLoader(DATA(args.folder),
-											   batch_size=32, 
-											   num_workers=4,
-											   shuffle=False)
+	data_loader = torch.utils.data.DataLoader(
+		DATA(prefix),
+		batch_size=32, 
+		num_workers=4,
+		shuffle=False
+	)
 
 	correct = 0
 	total = 0
 	net.eval()
-	#print('===> start evaluation ...')
 	with torch.no_grad():
 		for idx, (imgs, labels) in enumerate(data_loader):
 			imgs, labels = imgs.to(device), labels.to(device)
@@ -95,3 +84,12 @@ if __name__ == '__main__':
 			correct += (pred == labels).detach().sum().item()
 			total += len(pred)
 	print('acc = {} (correct/total = {}/{})'.format(float(correct)/total, correct, total))
+
+
+if __name__ == '__main__':
+	parser = argparse.ArgumentParser()
+	parser.add_argument("--folder", type=str)
+	parser.add_argument('--model_path', type=str, default='./Classifier.pth')
+	args = parser.parse_args()
+
+	classify_dir(args.folder, args.model_path)
