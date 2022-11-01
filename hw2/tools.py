@@ -5,7 +5,7 @@ from tqdm import tqdm
 from pytorch_fid.fid_score import calculate_fid_given_paths
 
 from face_recog import face_recog
-
+from digit_classifier import classify_dir
 
 class Config:
     def __init__(self):
@@ -15,11 +15,11 @@ class Config:
         self.epochs = 1
         self.batch_size = 16
         self.lr = 0.001
-        self.lr1 = 0.001
-        self.lr2 = 0.001
-        self.beta1 = 0.9
-        self.beta2 = 0.999
+        self.betas = (0.9, 0.999)
         self.lambda_ = 0.05
+        self.beta_start = 1e-4
+        self.beta_end = 2e-2
+        self.noise_steps = 1000
         self.use_checkpoint = False
 
 
@@ -231,7 +231,7 @@ def train_DANN(device, loaders, models, criterions, optimizers, epochs, lambda_)
         writer.add_scalar('accuracy', num_correct / len(loaders[2].dataset), epoch)
         print(f'epoch = {epoch}, accuracy = {num_correct / len(loaders[2].dataset)}')
 
-        if (epoch % 10 == 0) or (best_score < num_correct):
+        if (epoch % 10 == 9) or (best_score < num_correct):
             save_checkpoint(epoch, models[0], optimizers[0])
             save_checkpoint(epoch, models[1], optimizers[1])
             save_checkpoint(epoch, models[2], optimizers[2])
@@ -239,5 +239,68 @@ def train_DANN(device, loaders, models, criterions, optimizers, epochs, lambda_)
     writer.close()
 
 
-def train_DDPM(device, loader, models, criterions, optimizers, epochs):
-    pass
+def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noise_steps, epochs):
+    writer = SummaryWriter('saved_models/')
+    best_score = 0.0
+
+    alpha = 1 - beta
+    alpha_hat = torch.cumprod(alpha, dim=0)
+
+    for epoch in epochs:
+        sum_loss = 0.0
+        model.train()
+        for images, labels in tqdm(loader, postfix=f'epoch = {epoch}'):
+            images = images.to(device)
+            labels = labels.to(device)
+            batch_size = images.size(0)
+
+            t = torch.randint(1, noise_steps, (batch_size,), device=device)
+            x_t, noise = noise_images(images, t, alpha_hat)
+
+            optimizer.zero_grad()
+            predicted_noise = model(x_t, t, labels)
+            loss = criterion(noise, predicted_noise)
+            sum_loss += loss
+            loss.backward()
+            optimizer.step()
+            scheduler.step()
+
+        # 100 images for each class
+        model.eval()
+        with torch.no_grad():
+            cfg_scale = 3
+            for j in range(10):
+                labels = j * torch.ones(100, dtype=torch.long, device=device)
+                x = torch.randn((100, 3, 32, 32), device=device)
+                for i in reversed(range(1, noise_steps)):
+                    t = i * torch.ones(100, dtype=torch.long, device=device)
+                    predicted_noise = model(x, t, labels)
+                    uncond_predicted_noise = model(x, t, None)
+                    predicted_noise = torch.lerp(uncond_predicted_noise, predicted_noise, cfg_scale)
+
+                    noise = torch.randn_like(x) if i > 1 else torch.zeros_like(x)
+                    beta_t = beta[t][:, None, None, None]
+                    alpha_t = alpha[t][:, None, None, None]
+                    alpha_hat_t = alpha_hat[t][:, None, None, None]
+                    x = 1 / torch.sqrt(alpha) * (x - ((1 - alpha_t) / (torch.sqrt(1 - alpha_hat_t))) * predicted_noise) + torch.sqrt(beta_t) * noise
+                for i, img in enumerate(x):
+                    save_image((img.clamp(-1, 1) + 1) / 2, f'outputs/hw2_2/{j}_{i+1:03d}.png')
+
+        score = classify_dir('outputs/hw2_2/')
+        writer.add_scalar('lr', scheduler.get_last_lr()[0], epoch)
+        writer.add_scalar('loss', sum_loss.mean().item(), epoch)
+        writer.add_scalar('score', score, epoch)
+
+        if (epoch % 5 == 4) or (best_score < score):
+            save_checkpoint(epoch, model, optimizer)
+            save_checkpoint(epoch, model, optimizer)
+            save_checkpoint(epoch, model, optimizer)
+            best_score = score if best_score < score else best_score
+    writer.close()
+
+
+def noise_images(x, t, alpha_hat):
+    sqrt_alpha_hat = torch.sqrt(alpha_hat[t])[:, None, None, None]
+    sqrt_one_minus_alpha_hat = torch.sqrt(1 - alpha_hat[t])[:, None, None, None]
+    E = torch.randn_like(x)
+    return sqrt_alpha_hat * x + sqrt_one_minus_alpha_hat * E, E

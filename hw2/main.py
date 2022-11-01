@@ -1,5 +1,7 @@
 import os
 import argparse
+from pickletools import optimize
+from sched import scheduler
 
 import numpy as np
 import torch
@@ -27,17 +29,19 @@ def main():
     if 'face' in args.target:
         config.source = './hw2_data/face/train/'
         config.batch_size = 256
-        config.epochs = 100
+        config.epochs = 200
         config.lr = 0.0004
-        config.beta1 = 0.5
-        config.lr1 = 0.01
+        config.betas = (0.5, 0.999)
         train_DCGAN(device, *setup_DCGAN(config))
 
     elif 'digits' in args.target:
         config.source = './hw2_data/digits/mnistm/train.csv'    # Not allow to use all images.
         config.batch_size = 128
-        config.epochs = 80000
+        config.epochs = 100
         config.lr = 0.0004
+        config.beta_start = 0.0001
+        config.beta_end = 0.02
+        config.noise_steps = 1000
         train_DDPM(device, *setup_DDPM(config))
 
     elif 'usps' in args.target:
@@ -84,8 +88,8 @@ def setup_DCGAN(config):
         torch.nn.BCELoss()
     )
     optimizers = (
-        torch.optim.AdamW(models[0].parameters(), lr=config.lr, betas=(config.beta1, config.beta2)),
-        torch.optim.SGD(models[1].parameters(), lr=config.lr1)
+        torch.optim.AdamW(models[0].parameters(), lr=config.lr, betas=config.betas),
+        torch.optim.AdamW(models[1].parameters(), lr=config.lr, betas=config.betas),
     )
     epochs = range(config.epochs)
     if 'DCGAN' in config.use_checkpoint:
@@ -99,8 +103,8 @@ def setup_DCGAN(config):
 
 
 def setup_DDPM(config):
-    mean = np.array((0.4632221, 0.4668803, 0.41948238))
-    std = np.array((0.2537196, 0.23820335, 0.2622173))
+    mean = np.array((0.5, 0.5, 0.5))
+    std = np.array((0.5, 0.5, 0.5))
     trans = transforms.Compose([
         transforms.Resize(32),
         transforms.ToTensor(),
@@ -108,8 +112,18 @@ def setup_DDPM(config):
     ])
     source_set = DigitDataset(prefix=config.source, trans=trans, labeled=True)
     source = DataLoader(source_set, batch_size=config.batch_size, shuffle=True)
-    # TODO
-    return
+    model = UNet(c_in=3, c_out=3, time_dim=256, num_classes=10)
+    criterion = torch.nn.MSELoss()
+    optimizer = torch.optim.AdamW(model.parameters(), lr=config.lr, betas=config.betas)
+    scheduler = torch.optim.lr_scheduler.OneCycleLR(
+        optimizer,
+        max_lr=config.lr,
+        step_per_epoch=len(source),
+        epochs=config.epochs
+    )
+    beta = torch.linspace(config.beta_start, config.beta_end, config.noise_steps)
+    epochs = range(config.epochs)
+    return source, model, criterion, optimizer, scheduler, beta, config.noise_steps, epochs
 
 
 def setup_DANN(config):
