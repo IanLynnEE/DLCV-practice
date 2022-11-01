@@ -240,7 +240,7 @@ def train_DANN(device, loaders, models, criterions, optimizers, epochs, lambda_)
     writer.close()
 
 
-def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noise_steps, epochs):
+def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noise_steps, epochs, post_trans):
     writer = SummaryWriter('saved_models/')
     best_score = 0.0
 
@@ -268,18 +268,18 @@ def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noi
             optimizer.step()
             scheduler.step()
 
-        # 100 images for each class
+        # 32 images per class
         model.eval()
         with torch.no_grad():
             cfg_scale = 3
             for j in range(10):
-                labels = j * torch.ones(100, dtype=torch.long, device=device)
-                x = torch.randn((100, 3, 32, 32), device=device)
-                for i in reversed(range(1, noise_steps)):
-                    t = i * torch.ones(100, dtype=torch.long, device=device)
+                labels = j * torch.ones(32, dtype=torch.long, device=device)
+                x = torch.randn((32, 3, 32, 32), device=device)
+                for i in tqdm(reversed(range(1, noise_steps))):
+                    t = i * torch.ones(32, dtype=torch.long, device=device)
                     predicted_noise = model(x, t, labels)
-                    uncond_predicted_noise = model(x, t, None)
-                    predicted_noise = torch.lerp(uncond_predicted_noise, predicted_noise, cfg_scale)
+                    # uncond_predicted_noise = model(x, t, None)
+                    # predicted_noise = torch.lerp(uncond_predicted_noise, predicted_noise, cfg_scale)
 
                     beta_t = beta[t][:, None, None, None]
                     alpha_t = alpha[t][:, None, None, None]
@@ -287,7 +287,7 @@ def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noi
                     noise = torch.sqrt(beta_t) * torch.randn_like(x) if i > 1 else torch.zeros_like(x)
                     x = 1 / torch.sqrt(alpha_t) * (x - beta_t / torch.sqrt(1 - alpha_hat_t) * predicted_noise) + noise
                 for i, img in enumerate(x):
-                    save_image((img.clamp(-1, 1) + 1) / 2, f'outputs/hw2_2/{j}_{i+1:03d}.png')
+                    save_image(post_trans(img), f'outputs/hw2_2/{j}_{i+1:03d}.png')
 
         score = classify_dir('outputs/hw2_2/')
         writer.add_scalar('lr', scheduler.get_last_lr()[0], epoch)

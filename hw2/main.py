@@ -34,7 +34,7 @@ def main():
 
     elif 'digits' in args.target:
         config.source = './hw2_data/digits/mnistm/train.csv'    # Not allow to use all images.
-        config.batch_size = 128
+        config.batch_size = 32
         config.epochs = 100
         config.lr = 0.0004
         config.beta_start = 0.0001
@@ -110,6 +110,10 @@ def setup_DDPM(config):
     ])
     source_set = DigitDataset(prefix=config.source, trans=trans, labeled=True)
     source = DataLoader(source_set, batch_size=config.batch_size, shuffle=True)
+    trans = transforms.Compose([
+        transforms.Resize(28),
+        transforms.Normalize(-mean / std, 1 / std),
+    ])
     model = UNet(c_in=3, c_out=3, time_dim=256, num_classes=10)
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=config.lr, betas=config.betas)
@@ -121,7 +125,7 @@ def setup_DDPM(config):
     )
     beta = torch.linspace(config.beta_start, config.beta_end, config.noise_steps)
     epochs = range(config.epochs)
-    return source, model, criterion, optimizer, scheduler, beta, config.noise_steps, epochs
+    return source, model, criterion, optimizer, scheduler, beta, config.noise_steps, epochs. trans
 
 
 def setup_DANN(config):
