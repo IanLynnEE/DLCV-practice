@@ -1,7 +1,5 @@
 import os
 import argparse
-from pickletools import optimize
-from sched import scheduler
 
 import numpy as np
 import torch
@@ -118,7 +116,7 @@ def setup_DDPM(config):
     scheduler = torch.optim.lr_scheduler.OneCycleLR(
         optimizer,
         max_lr=config.lr,
-        step_per_epoch=len(source),
+        steps_per_epoch=len(source),
         epochs=config.epochs
     )
     beta = torch.linspace(config.beta_start, config.beta_end, config.noise_steps)

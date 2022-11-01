@@ -7,6 +7,7 @@ from pytorch_fid.fid_score import calculate_fid_given_paths
 from face_recog import face_recog
 from digit_classifier import classify_dir
 
+
 class Config:
     def __init__(self):
         self.source = None
@@ -243,6 +244,8 @@ def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noi
     writer = SummaryWriter('saved_models/')
     best_score = 0.0
 
+    model.to(device)
+    beta = beta.to(device)
     alpha = 1 - beta
     alpha_hat = torch.cumprod(alpha, dim=0)
 
@@ -278,11 +281,11 @@ def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noi
                     uncond_predicted_noise = model(x, t, None)
                     predicted_noise = torch.lerp(uncond_predicted_noise, predicted_noise, cfg_scale)
 
-                    noise = torch.randn_like(x) if i > 1 else torch.zeros_like(x)
                     beta_t = beta[t][:, None, None, None]
                     alpha_t = alpha[t][:, None, None, None]
                     alpha_hat_t = alpha_hat[t][:, None, None, None]
-                    x = 1 / torch.sqrt(alpha) * (x - ((1 - alpha_t) / (torch.sqrt(1 - alpha_hat_t))) * predicted_noise) + torch.sqrt(beta_t) * noise
+                    noise = torch.sqrt(beta_t) * torch.randn_like(x) if i > 1 else torch.zeros_like(x)
+                    x = 1 / torch.sqrt(alpha_t) * (x - beta_t / torch.sqrt(1 - alpha_hat_t) * predicted_noise) + noise
                 for i, img in enumerate(x):
                     save_image((img.clamp(-1, 1) + 1) / 2, f'outputs/hw2_2/{j}_{i+1:03d}.png')
 
