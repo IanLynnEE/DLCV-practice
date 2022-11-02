@@ -19,7 +19,7 @@ def inference():
     parser.add_argument('--data', type=str, default='face')
     parser.add_argument('--input_dir', type=str, default='None')
     parser.add_argument('--output_dir_or_path', type=str)
-    parser.add_argument('--seed', type=int, default=21)
+    parser.add_argument('--seed', type=int, default=54)
     args = parser.parse_args()
 
     device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
@@ -61,7 +61,7 @@ def inference():
 
     # Part 2
     elif args.data == 'digits':
-        model_path = 'saved_models/DDPM_EMA/UNet.pt'
+        model_path = 'saved_models/DDPM_EMA/UNet_99.pt'
         noise_steps = 1000
         beta_start = 0.0001
         beta_end = 0.02
@@ -117,7 +117,6 @@ def setup_DANN(model_dir, data_dir):
     model1 = DANNLabel()
     checkpoint = torch.load(os.path.join(model_dir, 'DANNLabel.pt'))
     model1.load_state_dict(checkpoint['model_state_dict'])
-    print(checkpoint['epoch'])
     return model0, model1, loader
 
 
