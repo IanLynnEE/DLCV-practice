@@ -242,7 +242,7 @@ def train_DANN(device, loaders, models, criterions, optimizers, epochs, lambda_)
 
 def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noise_steps, epochs, post_trans):
     writer = SummaryWriter('saved_models/')
-    best_score = 0.0
+    best_score = 0
 
     model.to(device)
     beta = beta.to(device)
@@ -268,18 +268,15 @@ def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noi
             optimizer.step()
             scheduler.step()
 
-        # 32 images per class
+        # 8 images per class
         model.eval()
         with torch.no_grad():
-            cfg_scale = 3
             for j in range(10):
-                labels = j * torch.ones(32, dtype=torch.long, device=device)
-                x = torch.randn((32, 3, 32, 32), device=device)
+                labels = j * torch.ones(8, dtype=torch.long, device=device)
+                x = torch.randn((8, 3, 32, 32), device=device)
                 for i in tqdm(reversed(range(1, noise_steps))):
-                    t = i * torch.ones(32, dtype=torch.long, device=device)
+                    t = i * torch.ones(8, dtype=torch.long, device=device)
                     predicted_noise = model(x, t, labels)
-                    # uncond_predicted_noise = model(x, t, None)
-                    # predicted_noise = torch.lerp(uncond_predicted_noise, predicted_noise, cfg_scale)
 
                     beta_t = beta[t][:, None, None, None]
                     alpha_t = alpha[t][:, None, None, None]
