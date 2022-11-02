@@ -261,6 +261,9 @@ def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noi
             x_t, noise = noise_images(images, t, alpha_hat)
 
             optimizer.zero_grad()
+            # Classifier Free Guidance
+            if torch.rand(1) < 0.1:
+                labels = None
             predicted_noise = model(x_t, t, labels)
             loss = criterion(noise, predicted_noise)
             sum_loss += loss
@@ -277,6 +280,10 @@ def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noi
                 for i in tqdm(reversed(range(1, noise_steps))):
                     t = i * torch.ones(8, dtype=torch.long, device=device)
                     predicted_noise = model(x, t, labels)
+
+                    # Classifier Free Guidance
+                    uncond_predicted_noise = model(x, t, None)
+                    predicted_noise += torch.lerp(uncond_predicted_noise, predicted_noise, 3)
 
                     beta_t = beta[t][:, None, None, None]
                     alpha_t = alpha[t][:, None, None, None]

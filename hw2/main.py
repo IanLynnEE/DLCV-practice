@@ -123,7 +123,17 @@ def setup_DDPM(config):
         steps_per_epoch=len(source),
         epochs=config.epochs
     )
-    beta = torch.linspace(config.beta_start, config.beta_end, config.noise_steps)
+
+    # Cosine scheduler for beta
+    cosine_s = 8e-3
+    timesteps = torch.arange(config.noise_steps + 1) / config.noise_steps + cosine_s
+    alpha = torch.cos(timesteps / (1 + cosine_s) * torch.pi / 2).pow(2)
+    alpha = alpha / alpha[0]
+    beta = 1 - alpha[1:] / alpha[:-1]
+    beta = beta.clamp(max=0.999)
+
+    # beta = torch.linspace(config.beta_start, config.beta_end, config.noise_steps)
+
     epochs = range(config.epochs)
     return source, model, criterion, optimizer, scheduler, beta, config.noise_steps, epochs, trans
 
