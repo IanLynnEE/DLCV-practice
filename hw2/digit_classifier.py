@@ -89,7 +89,7 @@ def classify_dir(prefix, model_path='./Classifier.pth'):
             correct += (pred == labels).detach().sum().item()
             total += len(pred)
     print('acc = {} (correct/total = {}/{})'.format(float(correct)/total, correct, total))
-    return correct
+    return correct / total
 
 
 if __name__ == '__main__':
