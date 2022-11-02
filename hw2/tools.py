@@ -55,10 +55,6 @@ class EMA:
         ema_model.load_state_dict(model.state_dict())
 
 
-def fix_seed(seed):
-    pass
-
-
 def save_checkpoint(epoch, model, optimizer, scheduler=None):
     path = f'saved_models/{model.__class__.__name__}_{epoch}.pt'
     print(f'Saving model to {path}...')

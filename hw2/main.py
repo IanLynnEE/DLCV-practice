@@ -53,6 +53,7 @@ def main():
         train_DANN(device, *setup_DANN(config), config.lambda_)
 
     elif 'svhn' in args.target:
+        # Get upper and lower bound by a) set lambda_ 0 and b) target = source
         config.source = 'hw2_data/digits/mnistm/train.csv'
         config.target = 'hw2_data/digits/svhn/train.csv'
         config.valid = 'hw2_data/digits/svhn/val.csv'
@@ -65,7 +66,6 @@ def main():
 
 
 def setup_DCGAN(config):
-    # https://gist.github.com/weiaicunzai/e623931921efefd4c331622c344d8151
     mean = np.array((0.5, 0.5, 0.5))
     std = np.array((0.5, 0.5, 0.5))
     trans = transforms.Compose([
