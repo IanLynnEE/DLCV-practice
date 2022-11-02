@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import torch
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import save_image
@@ -22,6 +24,35 @@ class Config:
         self.beta_end = 2e-2
         self.noise_steps = 1000
         self.use_checkpoint = False
+
+
+# https://github.com/tcapelle/Diffusion-Models-pytorch
+class EMA:
+    def __init__(self, beta):
+        super().__init__()
+        self.beta = beta
+        self.step = 0
+
+    def update_model_average(self, ma_model, current_model):
+        for current_params, ma_params in zip(current_model.parameters(), ma_model.parameters()):
+            old_weight, up_weight = ma_params.data, current_params.data
+            ma_params.data = self.update_average(old_weight, up_weight)
+
+    def update_average(self, old, new):
+        if old is None:
+            return new
+        return old * self.beta + (1 - self.beta) * new
+
+    def step_ema(self, ema_model, model, step_start_ema=2000):
+        if self.step < step_start_ema:
+            self.reset_parameters(ema_model, model)
+            self.step += 1
+            return
+        self.update_model_average(ema_model, model)
+        self.step += 1
+
+    def reset_parameters(self, ema_model, model):
+        ema_model.load_state_dict(model.state_dict())
 
 
 def fix_seed(seed):
@@ -260,6 +291,8 @@ def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noi
     writer = SummaryWriter('saved_models/')
 
     model.to(device)
+    ema_model = deepcopy(model).eval().requires_grad_(False)
+    ema = EMA(beta=0.995)
     beta = beta.to(device)
     alpha = 1 - beta
     alpha_hat = torch.cumprod(alpha, dim=0)
@@ -276,14 +309,15 @@ def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noi
             x_t, noise = noise_images(images, t, alpha_hat)
 
             optimizer.zero_grad()
-            # Classifier Free Guidance
-            if torch.rand(1) < 0.1:
-                labels = None
+            # # Classifier Free Guidance
+            # if torch.rand(1) < 0.1:
+            #     labels = None
             predicted_noise = model(x_t, t, labels)
             loss = criterion(noise, predicted_noise)
             sum_loss += loss
             loss.backward()
             optimizer.step()
+            ema.step_ema(ema_model, model)
             scheduler.step()
 
         writer.add_scalar('lr', scheduler.get_last_lr()[0], epoch)
@@ -300,11 +334,11 @@ def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noi
                 x = torch.randn((8, 3, 32, 32), device=device)
                 for i in tqdm(reversed(range(1, noise_steps)), postfix=f'For class {j}'):
                     t = i * torch.ones(8, dtype=torch.long, device=device)
-                    predicted_noise = model(x, t, labels)
+                    predicted_noise = ema_model(x, t, labels)
 
-                    # Classifier Free Guidance
-                    uncond_predicted_noise = model(x, t, None)
-                    predicted_noise = torch.lerp(uncond_predicted_noise, predicted_noise, 3)
+                    # # Classifier Free Guidance
+                    # uncond_predicted_noise = ema_model(x, t, None)
+                    # predicted_noise = torch.lerp(uncond_predicted_noise, predicted_noise, 3)
 
                     beta_t = beta[t][:, None, None, None]
                     alpha_t = alpha[t][:, None, None, None]
@@ -315,7 +349,7 @@ def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noi
                     save_image(post_trans(img), f'outputs/hw2_2/{j}_{i+1:03d}.png')
         score = classify_dir('outputs/hw2_2/')
         writer.add_scalar('score', score, epoch)
-        save_checkpoint(epoch, model, optimizer, scheduler)
+        save_checkpoint(epoch, ema_model, optimizer, scheduler)
     writer.close()
 
 
