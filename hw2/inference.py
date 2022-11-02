@@ -1,7 +1,9 @@
 import os
 import argparse
 
+import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn.manifold import TSNE
 from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
@@ -37,7 +39,7 @@ def inference():
             model_dir = 'saved_models/DANN_svhn/'
         else:
             raise NotImplementedError
-        filenames, preds = DANN_predict(device, *setup_DANN(model_dir, args.input_dir))
+        filenames, preds = DANN_predict(*setup_DANN(device, model_dir, args.input_dir))
         df = pd.DataFrame({
             'image_name': filenames,
             'label': preds
@@ -78,12 +80,12 @@ def inference():
         alpha = 1 - beta
         alpha_hat = torch.cumprod(alpha, dim=0)
 
-        ones = torch.ones(16, dtype=torch.long, device=device)
+        ones = torch.ones(100, dtype=torch.long, device=device)
         with torch.no_grad():
             for j in range(10):
                 labels = j * ones
-                x = torch.randn((16, 3, 32, 32), device=device)
-                for i in tqdm(reversed(range(1, noise_steps))):
+                x = torch.randn((100, 3, 32, 32), device=device)
+                for i in tqdm(reversed(range(0, noise_steps))):
                     t = i * ones
                     predicted_noise = model(x, t, labels)
                     beta_t = beta[t][:, None, None, None]
@@ -91,8 +93,8 @@ def inference():
                     alpha_hat_t = alpha_hat[t][:, None, None, None]
                     noise = torch.sqrt(beta_t) * torch.randn_like(x) if i > 1 else torch.zeros_like(x)
                     x = 1 / torch.sqrt(alpha_t) * (x - beta_t / torch.sqrt(1 - alpha_hat_t) * predicted_noise) + noise
-                # TODO: DELETE THIS
-                print(torch.cuda.mem_get_info(device=0))
+                    # if i % 200 == 0 or i == 999:
+                    #     save_image(post_trans(x[0]), f'figures/noise_{j}_{i}.png')
                 for i, image in enumerate(x):
                     save_image(post_trans(image), os.path.join(args.output_dir_or_path, f'{j}_{i:03d}.png'))
     else:
@@ -100,7 +102,7 @@ def inference():
     return
 
 
-def setup_DANN(model_dir, data_dir):
+def setup_DANN(device, model_dir, data_dir):
     mean = (0.4632221, 0.4668803, 0.41948238)
     std = (0.2537196, 0.23820335, 0.2622173)
     trans = transforms.Compose([
@@ -108,8 +110,9 @@ def setup_DANN(model_dir, data_dir):
         transforms.ToTensor(),
         transforms.Normalize(mean, std),
     ])
-    target = DigitDataset(prefix=data_dir, trans=trans, labeled=False)
-    loader = DataLoader(target, batch_size=16, shuffle=False)
+    # Set to be true for visualize only
+    target_set = DigitDataset(prefix=data_dir, trans=trans, labeled=False)
+    target = DataLoader(target_set, batch_size=16, shuffle=False)
 
     model0 = DANNFeature()
     checkpoint = torch.load(os.path.join(model_dir, 'DANNFeature.pt'))
@@ -117,7 +120,12 @@ def setup_DANN(model_dir, data_dir):
     model1 = DANNLabel()
     checkpoint = torch.load(os.path.join(model_dir, 'DANNLabel.pt'))
     model1.load_state_dict(checkpoint['model_state_dict'])
-    return model0, model1, loader
+
+    # source_set = DigitDataset(prefix='hw2_data/digits/mnistm/train.csv', trans=trans, labeled=True)
+    # source = DataLoader(source_set, batch_size=16, shuffle=False)
+    # visualize(model0, source, target, device)
+
+    return device, model0, model1, target
 
 
 def DANN_predict(device, model0, model1, loader):
@@ -134,6 +142,52 @@ def DANN_predict(device, model0, model1, loader):
             preds.extend(list(pred.detach().cpu().numpy()))
             filenames.extend(list(filename))
     return filenames, preds
+
+
+def plot_tsne(hiddens, labels, classes=10):
+    # Ref: https://blog.csdn.net/hustqb/article/details/80628721
+    tsne = TSNE(2)
+    components = tsne.fit_transform(hiddens)
+
+    df = pd.DataFrame(data=components, columns=['component 1', 'component 2'])
+    df['target'] = labels
+
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_subplot(1, 1, 1)
+    ax.set_xlabel('Component 1', fontsize=15)
+    ax.set_ylabel('Component 2', fontsize=15)
+    ax.set_title('tSNE', fontsize=20)
+    for target in range(classes):
+        indices = df['target'] == target
+        ax.scatter(df.loc[indices, 'component 1'], df.loc[indices, 'component 2'])
+    plt.show()
+    return
+
+
+def visualize(model, source, target, device):
+    hiddens = []
+    labels = []
+    model.to(device).eval()
+    with torch.no_grad():
+        for (data, label) in target:
+            data = data.to(device)
+            output = model(data)
+            hiddens.append(output.detach().cpu())
+            labels.extend(list(label))
+        features = torch.cat(hiddens)
+        plot_tsne(features, labels)
+
+        for (data, label) in source:
+            data = data.to(device)
+            output = model(data)
+            hiddens.append(output.detach().cpu())
+            labels.extend(list(label))
+        hiddens = torch.cat(hiddens)
+    zeros = [0 for _ in range(len(target.dataset))]
+    ones = [1 for _ in range(len(source.dataset))]
+    domain = zeros + ones
+    plot_tsne(hiddens, domain, 2)
+    return
 
 
 if __name__ == '__main__':
