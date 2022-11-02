@@ -28,24 +28,39 @@ def fix_seed(seed):
     pass
 
 
-def save_checkpoint(epoch, model, optimizer):
+def save_checkpoint(epoch, model, optimizer, scheduler=None):
     path = f'saved_models/{model.__class__.__name__}_{epoch}.pt'
     print(f'Saving model to {path}...')
-    torch.save(
-        {
-            'epoch': epoch,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-        },
-        path
-    )
+    if scheduler is None:
+        torch.save(
+            {
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+            },
+            path
+        )
+    else:
+        torch.save(
+            {
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'scheduler_state_dict': scheduler.state_dict()
+            },
+            path
+        )
 
 
-def load_checkpoint(path, model, optimizer):
+def load_checkpoint(path, model, optimizer, scheduler=None):
     checkpoint = torch.load(path)
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-    print(model.state_dict, optimizer.state_dict)
+    if scheduler is None:
+        print(model.state_dict, optimizer.state_dict)
+        return checkpoint['epoch']
+    scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+    print(model.state_dict, optimizer.state_dict, scheduler.state_dict)
     return checkpoint['epoch']
 
 
@@ -240,9 +255,9 @@ def train_DANN(device, loaders, models, criterions, optimizers, epochs, lambda_)
     writer.close()
 
 
+# https://github.com/tcapelle/Diffusion-Models-pytorch
 def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noise_steps, epochs, post_trans):
     writer = SummaryWriter('saved_models/')
-    best_score = 0
 
     model.to(device)
     beta = beta.to(device)
@@ -271,19 +286,25 @@ def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noi
             optimizer.step()
             scheduler.step()
 
+        writer.add_scalar('lr', scheduler.get_last_lr()[0], epoch)
+        writer.add_scalar('loss', sum_loss.mean().item(), epoch)
+
+        if epoch % 5 != 4:
+            continue
+
         # 8 images per class
         model.eval()
         with torch.no_grad():
             for j in range(10):
                 labels = j * torch.ones(8, dtype=torch.long, device=device)
                 x = torch.randn((8, 3, 32, 32), device=device)
-                for i in tqdm(reversed(range(1, noise_steps))):
+                for i in tqdm(reversed(range(1, noise_steps)), postfix=f'For class {j}'):
                     t = i * torch.ones(8, dtype=torch.long, device=device)
                     predicted_noise = model(x, t, labels)
 
                     # Classifier Free Guidance
                     uncond_predicted_noise = model(x, t, None)
-                    predicted_noise += torch.lerp(uncond_predicted_noise, predicted_noise, 3)
+                    predicted_noise = torch.lerp(uncond_predicted_noise, predicted_noise, 3)
 
                     beta_t = beta[t][:, None, None, None]
                     alpha_t = alpha[t][:, None, None, None]
@@ -292,17 +313,9 @@ def train_DDPM(device, loader, model, criterion, optimizer, scheduler, beta, noi
                     x = 1 / torch.sqrt(alpha_t) * (x - beta_t / torch.sqrt(1 - alpha_hat_t) * predicted_noise) + noise
                 for i, img in enumerate(x):
                     save_image(post_trans(img), f'outputs/hw2_2/{j}_{i+1:03d}.png')
-
         score = classify_dir('outputs/hw2_2/')
-        writer.add_scalar('lr', scheduler.get_last_lr()[0], epoch)
-        writer.add_scalar('loss', sum_loss.mean().item(), epoch)
         writer.add_scalar('score', score, epoch)
-
-        if (epoch % 5 == 4) or (best_score < score):
-            save_checkpoint(epoch, model, optimizer)
-            save_checkpoint(epoch, model, optimizer)
-            save_checkpoint(epoch, model, optimizer)
-            best_score = score if best_score < score else best_score
+        save_checkpoint(epoch, model, optimizer, scheduler)
     writer.close()
 
 

@@ -125,6 +125,7 @@ def setup_DDPM(config):
     )
 
     # Cosine scheduler for beta
+    # https://github.com/rosinality/denoising-diffusion-pytorch
     cosine_s = 8e-3
     timesteps = torch.arange(config.noise_steps + 1) / config.noise_steps + cosine_s
     alpha = torch.cos(timesteps / (1 + cosine_s) * torch.pi / 2).pow(2)
